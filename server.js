@@ -16,9 +16,26 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(process.cwd(), 'public')));
 
 // --- MongoDB Connection ---
-mongoose.connect(process.env.MONGO_URL)
-    .then(() => console.log('✅ Connected to MongoDB'))
-    .catch(err => console.error('❌ MongoDB Connection Error:', err));
+// --- MongoDB Connection Logic for Serverless ---
+let isConnected = false;
+
+async function connectToDatabase() {
+    if (isConnected) return;
+    try {
+        const db = await mongoose.connect(process.env.MONGO_URL);
+        isConnected = db.connections[0].readyState;
+        console.log('✅ Connected to MongoDB');
+    } catch (error) {
+        console.error('❌ Connection error:', error);
+        // Don't crash, let middleware handle retry or throw
+    }
+}
+
+// Middleware to ensure DB connection on every request
+app.use(async (req, res, next) => {
+    await connectToDatabase();
+    next();
+});
 
 // --- Excel Helper Removed --- (Using Mongoose now)
 
