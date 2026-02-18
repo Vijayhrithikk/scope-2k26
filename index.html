@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scope 2K26 — Raghu Engineering College</title>
+    <meta name="description"
+        content="Scope 2K26 - The ultimate college tech expo by Raghu Engineering College. Register your team and compete for amazing prizes!">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ===== Enhanced Animated Background ===== */
+        body {
+            background: #050816;
+        }
+
+        .bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: orbFloat 12s ease-in-out infinite;
+        }
+
+        .bg-orb-1 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, #00d4ff33, transparent 70%);
+            top: -10%;
+            left: -5%;
+            animation-delay: 0s;
+        }
+
+        .bg-orb-2 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #8b5cf633, transparent 70%);
+            top: 30%;
+            right: -10%;
+            animation-delay: -4s;
+            animation-duration: 15s;
+        }
+
+        .bg-orb-3 {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, #3b82f633, transparent 70%);
+            bottom: 10%;
+            left: 20%;
+            animation-delay: -8s;
+            animation-duration: 18s;
+        }
+
+        .bg-orb-4 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, #06b6d433, transparent 70%);
+            top: 60%;
+            left: 60%;
+            animation-delay: -6s;
+            animation-duration: 14s;
+        }
+
+        @keyframes orbFloat {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            25% {
+                transform: translate(40px, -30px) scale(1.1);
+            }
+
+            50% {
+                transform: translate(-20px, 50px) scale(0.9);
+            }
+
+            75% {
+                transform: translate(30px, 20px) scale(1.05);
+            }
+        }
+
+        /* Mesh gradient overlay */
+        .bg-mesh {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(0, 212, 255, 0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(59, 130, 246, 0.03) 0%, transparent 50%);
+        }
+
+        /* Animated grid */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(0, 212, 255, 0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.025) 1px, transparent 1px);
+            background-size: 80px 80px;
+            mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+        }
+
+        /* Floating particles */
+        .particle {
+            position: fixed;
+            width: 3px;
+            height: 3px;
+            background: rgba(0, 212, 255, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            animation: particleFloat linear infinite;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100px) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Main content above bg */
+        .main-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===== Logos ===== */
+        .logo-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-img {
+            width: 44px;
+            height: 44px;
+        }
+
+        .nav-logo {
+            gap: 12px !important;
+        }
+
+        /* ===== Hero Section ===== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding: 120px 0 80px;
+        }
+
+        /* Spotlight behind title */
+        .hero-spotlight {
+            position: absolute;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.12) 0%, rgba(139, 92, 246, 0.06) 40%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            animation: spotlightPulse 6s ease-in-out infinite;
+        }
+
+        @keyframes spotlightPulse {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.15);
+                opacity: 1;
+            }
+        }
+
+        .hero-content {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .hero-logos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 28px;
+            margin-bottom: 36px;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .hero-logo-large {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 212, 255, 0.35);
+            padding: 4px;
+            background: rgba(10, 14, 26, 0.6);
+            backdrop-filter: blur(8px);
+            transition: all 0.4s ease;
+            object-fit: cover;
+        }
+
+        .hero-logo-large:hover {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.25), 0 0 60px rgba(0, 212, 255, 0.1);
+            transform: scale(1.08);
+        }
+
+        .hero-divider {
+            width: 2px;
+            height: 50px;
+            background: linear-gradient(to bottom, transparent, var(--accent-cyan), transparent);
+        }
+
+        .hero-badge {
+            margin-bottom: 20px;
+            animation: fadeInUp 0.6s ease 0.05s both;
+        }
+
+        /* ===== MASSIVE SCOPE TITLE ===== */
+        .hero-title-scope {
+            font-size: clamp(4.5rem, 14vw, 10rem);
+            font-weight: 900;
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+            margin-bottom: 0;
+            animation: scopeReveal 1s ease 0.1s both;
+            position: relative;
+            display: inline-block;
+        }
+
+        .hero-title-scope .scope-text {
+            background: linear-gradient(135deg, #00d4ff 0%, #3b82f6 30%, #8b5cf6 60%, #00d4ff 100%);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-shift 4s ease infinite;
+            filter: drop-shadow(0 0 40px rgba(0, 212, 255, 0.3));
+        }
+
+        .hero-title-scope .year-text {
+            font-size: 0.45em;
+            display: block;
+            letter-spacing: 0.3em;
+            background: linear-gradient(90deg, #f59e0b, #fbbf24, #f59e0b);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s ease-in-out infinite;
+            margin-top: -4px;
+        }
+
+        /* Shimmer sweep */
+        @keyframes shimmer {
+            0% {
+                background-position: -100% 0;
+            }
+
+            50% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -100% 0;
+            }
+        }
+
+        @keyframes scopeReveal {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+                filter: blur(10px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+                filter: blur(0);
+            }
+        }
+
+        /* Glow ring behind title */
+        .hero-title-scope::after {
+            content: '';
+            position: absolute;
+            inset: -30px;
+            background: radial-gradient(ellipse, rgba(0, 212, 255, 0.06), transparent 60%);
+            z-index: -1;
+            border-radius: 50%;
+            animation: spotlightPulse 4s ease-in-out infinite;
+        }
+
+        .hero-tagline {
+            font-size: clamp(1rem, 2.5vw, 1.6rem);
+            color: var(--text-secondary);
+            max-width: 650px;
+            margin: 20px auto 8px;
+            font-weight: 400;
+            animation: fadeInUp 0.6s ease 0.3s both;
+            letter-spacing: 0.01em;
+        }
+
+        .hero-tagline strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .hero-college {
+            font-size: 1.05rem;
+            color: var(--accent-amber);
+            font-weight: 600;
+            margin-bottom: 36px;
+            letter-spacing: 0.04em;
+            animation: fadeInUp 0.6s ease 0.35s both;
+        }
+
+        /* Countdown */
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.6s ease 0.3s both;
+        }
+
+        .countdown-item {
+            background: rgba(26, 31, 58, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            min-width: 80px;
+            text-align: center;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+        }
+
+        .countdown-item:hover {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .countdown-item .number {
+            font-size: 2rem;
+            font-weight: 800;
+            font-family: var(--font-mono);
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .countdown-item .label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 4px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.6s ease 0.4s both;
+        }
+
+        .update-banner {
+            max-width: 600px;
+            margin: 32px auto 0;
+            padding: 16px 24px;
+            background: rgba(245, 158, 11, 0.06);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: var(--radius-md);
+            animation: fadeInUp 0.6s ease 0.5s both;
+        }
+
+        .update-banner h4 {
+            color: var(--accent-amber);
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        .update-banner p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        /* ===== Stats ===== */
+        .stats-section {
+            padding: 60px 0;
+            border-bottom: 1px solid rgba(42, 47, 74, 0.5);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 24px;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            font-family: var(--font-mono);
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* ===== About ===== */
+        .about-section {
+            padding: var(--section-padding);
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .about-card {
+            padding: 32px;
+        }
+
+        .about-card .icon {
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: var(--radius-md);
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+        }
+
+        .about-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+
+        .about-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* ===== Pricing ===== */
+        .pricing-section {
+            padding: var(--section-padding);
+            background: rgba(15, 22, 41, 0.4);
+        }
+
+        .pricing-card {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 40px;
+            text-align: center;
+            border: 2px solid var(--accent-cyan);
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        .pricing-amount {
+            font-size: 4rem;
+            font-weight: 900;
+            font-family: var(--font-mono);
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 16px 0;
+        }
+
+        .pricing-amount small {
+            font-size: 1.2rem;
+            -webkit-text-fill-color: var(--text-secondary);
+        }
+
+        .pricing-features {
+            list-style: none;
+            text-align: left;
+            margin: 24px 0;
+        }
+
+        .pricing-features li {
+            padding: 10px 0;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .pricing-features li::before {
+            content: '✓';
+            color: var(--accent-green);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* ===== Tracks ===== */
+        .tracks-section {
+            padding: var(--section-padding);
+        }
+
+        .tracks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .track-card {
+            padding: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .track-card .track-icon {
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: var(--radius-sm);
+            font-size: 1.3rem;
+        }
+
+        .track-card h3 {
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .track-card p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* ===== Prizes ===== */
+        .prizes-section {
+            padding: var(--section-padding);
+            background: rgba(15, 22, 41, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .prizes-section::before {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.08), transparent 70%);
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .prizes-header {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .prize-pool-amount {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 900;
+            font-family: var(--font-mono);
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .prizes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 48px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .prize-card {
+            padding: 32px;
+            text-align: center;
+        }
+
+        .prize-card .prize-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+
+        .prize-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .prize-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* ===== Contact ===== */
+        .contact-section {
+            padding: var(--section-padding);
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .contact-card {
+            padding: 24px;
+            text-align: center;
+        }
+
+        .contact-card .contact-icon {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+        }
+
+        .contact-card h3 {
+            font-size: 1rem;
+            margin-bottom: 6px;
+        }
+
+        .contact-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+
+        .contact-card a {
+            color: var(--accent-cyan);
+        }
+
+        /* ===== Footer ===== */
+        .footer-logos {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .footer-logo-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .about-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .prizes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tracks-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .countdown {
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            .countdown-item {
+                min-width: 65px;
+                padding: 12px 14px;
+            }
+
+            .countdown-item .number {
+                font-size: 1.5rem;
+            }
+
+            .hero {
+                padding-top: 100px;
+            }
+
+            .hero-logos {
+                gap: 12px;
+            }
+
+            .hero-logo-large {
+                width: 64px;
+                height: 64px;
+            }
+
+            .hero-title-scope {
+                font-size: clamp(3.5rem, 18vw, 6rem);
+            }
+
+            .hero-title-scope .year-text {
+                letter-spacing: 0.15em;
+            }
+
+            .hero-spotlight {
+                width: 400px;
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Animated Background -->
+    <div class="bg-canvas">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+        <div class="bg-orb bg-orb-4"></div>
+    </div>
+    <div class="bg-mesh"></div>
+    <div class="bg-grid"></div>
+
+    <div class="main-content">
+
+        <!-- Navbar -->
+        <nav class="navbar" id="navbar">
+            <div class="nav-content">
+                <a href="/" class="nav-logo logo-row">
+                    <img src="scope-logo.jpeg" alt="Scope Club" class="logo-img" style="border-radius:50%;">
+                    <span>Scope 2K26</span>
+                    <img src="college-logo.jpeg" alt="Raghu Engineering College" class="logo-img"
+                        style="border-radius:50%;">
+                </a>
+                <ul class="nav-links" id="navLinks">
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#tracks">Tracks</a></li>
+                    <li><a href="#prizes">Prizes</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                    <li><a href="/register" class="nav-cta">Register Now</a></li>
+                </ul>
+                <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Hero -->
+        <section class="hero">
+            <div class="hero-spotlight"></div>
+            <div class="container">
+                <div class="hero-content">
+                    <!-- Logos -->
+                    <div class="hero-logos">
+                        <img src="scope-logo.jpeg" alt="Scope Club" class="hero-logo-large">
+                        <div class="hero-divider"></div>
+                        <img src="chakravyuh-logo.jpeg" alt="Chakravyuh 2K26" class="hero-logo-large">
+                        <div class="hero-divider"></div>
+                        <img src="college-logo.jpeg" alt="Raghu Engineering College" class="hero-logo-large">
+                    </div>
+
+                    <div class="hero-badge">
+                        <span class="badge">🚀 Registrations Open — March 5, 2026</span>
+                    </div>
+                    <h1 class="hero-title-scope">
+                        <span class="scope-text">SCOPE</span>
+                        <span class="year-text">— 2 K 2 6 —</span>
+                    </h1>
+                    <p class="hero-tagline">
+                        The <strong>ultimate college tech expo</strong> — showcase talent, innovate solutions, and
+                        compete for incredible prizes.
+                    </p>
+                    <p class="hero-college">📍 Raghu Engineering College, Visakhapatnam</p>
+
+                    <!-- Countdown Timer -->
+                    <div class="countdown" id="countdown">
+                        <div class="countdown-item">
+                            <div class="number" id="days">00</div>
+                            <div class="label">Days</div>
+                        </div>
+                        <div class="countdown-item">
+                            <div class="number" id="hours">00</div>
+                            <div class="label">Hours</div>
+                        </div>
+                        <div class="countdown-item">
+                            <div class="number" id="minutes">00</div>
+                            <div class="label">Minutes</div>
+                        </div>
+                        <div class="countdown-item">
+                            <div class="number" id="seconds">00</div>
+                            <div class="label">Seconds</div>
+                        </div>
+                    </div>
+
+                    <div class="hero-buttons">
+                        <a href="/register" class="btn-primary">Register Now →</a>
+                        <a href="#about" class="btn-outline">Learn More</a>
+                    </div>
+
+                    <div class="update-banner">
+                        <h4>📢 Important Update</h4>
+                        <p>Entry fee is just ₹400 per team (1-4 members). Hurry — spots are filling fast!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats -->
+        <section class="stats-section">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-item reveal">
+                        <div class="stat-number" data-count="100">0+</div>
+                        <div class="stat-label">Teams Expected</div>
+                    </div>
+                    <div class="stat-item reveal">
+                        <div class="stat-number">₹400</div>
+                        <div class="stat-label">Per Team</div>
+                    </div>
+                    <div class="stat-item reveal">
+                        <div class="stat-number" data-count="8">0+</div>
+                        <div class="stat-label">Event Tracks</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About -->
+        <section class="about-section" id="about">
+            <div class="container">
+                <h2 class="section-title">What is <span class="gradient-text">Scope 2K26</span>?</h2>
+                <p class="section-subtitle">A platform where creativity meets technology. Compete, collaborate, and
+                    create solutions that matter.</p>
+                <div class="about-grid">
+                    <div class="glass-card about-card reveal">
+                        <div class="icon">🎯</div>
+                        <h3>Compete</h3>
+                        <p>Go head-to-head with brilliant minds from across the campus. Solve real-world challenges and
+                            prove your skills.</p>
+                    </div>
+                    <div class="glass-card about-card reveal">
+                        <div class="icon">🤝</div>
+                        <h3>Collaborate</h3>
+                        <p>Team up with 1-4 members and combine diverse skills to create innovative solutions together.
+                        </p>
+                    </div>
+                    <div class="glass-card about-card reveal">
+                        <div class="icon">🏆</div>
+                        <h3>Win Big</h3>
+                        <p>Walk away with amazing prizes, certifications, and recognition. Every participant gets a
+                            certificate!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing -->
+        <section class="pricing-section" id="pricing">
+            <div class="container">
+                <h2 class="section-title">Entry <span class="gradient-text">Fee</span></h2>
+                <p class="section-subtitle">One flat fee for your entire team — no hidden costs!</p>
+                <div class="glass-card pricing-card reveal">
+                    <span class="badge badge-success">Best Value</span>
+                    <div class="pricing-amount">₹400 <small>/ team</small></div>
+                    <p style="color: var(--text-secondary);">For teams of 1 to 4 members</p>
+                    <ul class="pricing-features">
+                        <li>Team size: 1 to 4 members</li>
+                        <li>Full event access for all members</li>
+                        <li>Certificate for every participant</li>
+                        <li>Swag kit for each team</li>
+                        <li>Chance to win exciting prizes</li>
+                    </ul>
+                    <a href="/register" class="btn-primary" style="width: 100%; margin-top: 8px;">Register Your Team
+                        →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tracks -->
+        <section class="tracks-section" id="tracks">
+            <div class="container">
+                <h2 class="section-title">Event <span class="gradient-text">Tracks</span></h2>
+                <p class="section-subtitle">Choose from diverse problem domains. Pick your passion and showcase your
+                    skills!</p>
+                <div class="tracks-grid">
+                    <div class="glass-card track-card reveal">
+                        <div class="track-icon">🤖</div>
+                        <div>
+                            <h3>AI & Machine Learning</h3>
+                            <p>Build intelligent solutions</p>
+                        </div>
+                    </div>
+                    <div class="glass-card track-card reveal">
+                        <div class="track-icon">🌐</div>
+                        <div>
+                            <h3>Web Development</h3>
+                            <p>Create stunning web apps</p>
+                        </div>
+                    </div>
+                    <div class="glass-card track-card reveal">
+                        <div class="track-icon">📱</div>
+                        <div>
+                            <h3>Mobile Apps</h3>
+                            <p>Design mobile experiences</p>
+                        </div>
+                    </div>
+                    <div class="glass-card track-card reveal">
+                        <div class="track-icon">🔒</div>
+                        <div>
+                            <h3>Cybersecurity</h3>
+                            <p>Protect digital assets</p>
+                        </div>
+                    </div>
+                    <div class="glass-card track-card reveal">
+                        <div class="track-icon">🌱</div>
+                        <div>
+                            <h3>Sustainability & Green Tech</h3>
+                            <p>Solutions for the planet</p>
+                        </div>
+                    </div>
+                    <div class="glass-card track-card reveal">
+                        <div class="track-icon">📊</div>
+                        <div>
+                            <h3>Data Science</h3>
+                            <p>Insights from data</p>
+                        </div>
+                    </div>
+                    <div class="glass-card track-card reveal">
+                        <div class="track-icon">🏥</div>
+                        <div>
+                            <h3>Healthcare & BioTech</h3>
+                            <p>Innovate for health</p>
+                        </div>
+                    </div>
+                    <div class="glass-card track-card reveal">
+                        <div class="track-icon">💡</div>
+                        <div>
+                            <h3>Open Innovation</h3>
+                            <p>Any creative solution!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Prizes -->
+        <section class="prizes-section" id="prizes">
+            <div class="container">
+                <div class="prizes-header">
+                    <h2 class="section-title">Win Big.</h2>
+                    <div class="prize-pool-amount">₹20,000+</div>
+                    <p class="section-subtitle" style="margin-top: 12px;">Cash prizes up to ₹20,000! Compete for the top
+                        positions — winners take
+                        home cash, exclusive merch, and recognized certifications.</p>
+                </div>
+                <div class="prizes-grid">
+                    <div class="glass-card prize-card reveal">
+                        <div class="prize-icon">🥇</div>
+                        <h3>Cash Rewards</h3>
+                        <p>Substantial cash prizes for the 1st, 2nd, and 3rd place teams.</p>
+                    </div>
+                    <div class="glass-card prize-card reveal">
+                        <div class="prize-icon">🎁</div>
+                        <h3>Exclusive Merch</h3>
+                        <p>Official Scope 2K26 swag, goodies, and branded merchandise.</p>
+                    </div>
+                    <div class="glass-card prize-card reveal">
+                        <div class="prize-icon">📜</div>
+                        <h3>Certifications</h3>
+                        <p>Verified certificates of merit and participation for all teams.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact -->
+        <section class="contact-section" id="contact">
+            <div class="container">
+                <h2 class="section-title">Get in <span class="gradient-text">Touch</span></h2>
+                <p class="section-subtitle">Have questions? Reach out to our organizing team.</p>
+                <div class="contact-grid">
+                    <div class="glass-card contact-card reveal">
+                        <div class="contact-icon">👨‍🎓</div>
+                        <h3>Student Coordinators</h3>
+                        <p>
+                            <strong>K. Sandeep</strong><br>
+                            <a href="tel:+917670996681">📞 7670996681</a><br><br>
+                            <strong>P. Akhil</strong><br>
+                            <a href="tel:+917670850910">📞 7670850910</a>
+                        </p>
+                    </div>
+                    <div class="glass-card contact-card reveal">
+                        <div class="contact-icon">🎓</div>
+                        <h3>Faculty Coordinators</h3>
+                        <p>
+                            <strong>Dr. G. Sridevi</strong><br>
+                            Head of Department<br><br>
+                            <strong>P. Anusha</strong><br>
+                            Faculty Coordinator
+                        </p>
+                    </div>
+                </div>
+                <div style="text-align:center; margin-top:32px;">
+                    <a href="https://www.instagram.com/raghu_scope?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+                        target="_blank" class="btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                        </svg>
+                        Follow us on Instagram
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-brand">
+                        <div class="footer-logos">
+                            <img src="scope-logo.jpeg" alt="Scope Club" class="footer-logo-img">
+                            <img src="college-logo.jpeg" alt="Raghu Engineering College" class="footer-logo-img">
+                        </div>
+                        <h3><span class="gradient-text">Scope 2K26</span></h3>
+                        <p>Igniting innovation through creativity at Raghu Engineering College.</p>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Event</h4>
+                        <ul>
+                            <li><a href="#pricing">Pricing</a></li>
+                            <li><a href="#tracks">Tracks</a></li>
+                            <li><a href="#prizes">Prizes</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Quick Links</h4>
+                        <ul>
+                            <li><a href="/register">Register</a></li>
+                            <li><a href="#contact">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Venue</h4>
+                        <ul>
+                            <li><a href="#">Raghu Engineering College</a></li>
+                            <li><a href="#">Visakhapatnam, AP</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>© 2026 Scope 2K26 — Raghu Engineering College. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+
+    </div><!-- /main-content -->
+
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const count = 30;
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDuration = (8 + Math.random() * 12) + 's';
+                particle.style.animationDelay = (Math.random() * 10) + 's';
+                particle.style.width = (2 + Math.random() * 3) + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.opacity = (0.2 + Math.random() * 0.4);
+                const colors = ['rgba(0,212,255,0.6)', 'rgba(59,130,246,0.5)', 'rgba(139,92,246,0.4)'];
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                document.querySelector('.bg-canvas').appendChild(particle);
+            }
+        }
+        createParticles();
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+        });
+
+        // Mobile Nav toggle
+        document.getElementById('mobileToggle').addEventListener('click', () => {
+            document.getElementById('navLinks').classList.toggle('active');
+        });
+
+        // Countdown Timer — March 5, 2026
+        const eventDate = new Date('2026-03-05T09:00:00+05:30').getTime();
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const diff = eventDate - now;
+
+            if (diff <= 0) {
+                document.getElementById('days').textContent = '00';
+                document.getElementById('hours').textContent = '00';
+                document.getElementById('minutes').textContent = '00';
+                document.getElementById('seconds').textContent = '00';
+                return;
+            }
+
+            document.getElementById('days').textContent = String(Math.floor(diff / (1000 * 60 * 60 * 24))).padStart(2, '0');
+            document.getElementById('hours').textContent = String(Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+            document.getElementById('minutes').textContent = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+            document.getElementById('seconds').textContent = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
+        // Scroll reveal
+        const revealElements = document.querySelectorAll('.reveal');
+        function checkReveal() {
+            revealElements.forEach(el => {
+                if (el.getBoundingClientRect().top < window.innerHeight - 80) el.classList.add('active');
+            });
+        }
+        window.addEventListener('scroll', checkReveal);
+        checkReveal();
+
+        // Counter animation
+        function animateCounters() {
+            document.querySelectorAll('[data-count]').forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-count'));
+                const suffix = counter.textContent.includes('+') ? '+' : '';
+                let current = 0;
+                const increment = target / 50;
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) { counter.textContent = target + suffix; clearInterval(timer); }
+                    else counter.textContent = Math.ceil(current) + suffix;
+                }, 30);
+            });
+        }
+
+        let countersAnimated = false;
+        new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !countersAnimated) { animateCounters(); countersAnimated = true; }
+            });
+        }, { threshold: 0.5 }).observe(document.querySelector('.stats-section'));
+    </script>
+
+</body>
+
+</html>

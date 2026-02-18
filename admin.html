@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — Scope 2K26</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ===== Login Overlay ===== */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-overlay.hidden {
+            display: none;
+        }
+
+        .login-box {
+            text-align: center;
+            max-width: 380px;
+            width: 100%;
+            padding: 0 24px;
+        }
+
+        .login-box h1 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .login-box p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .login-box .form-control {
+            text-align: center;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+
+        .login-error {
+            color: var(--accent-red);
+            font-size: 0.85rem;
+            margin-top: -8px;
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        /* ===== Dashboard ===== */
+        .dashboard {
+            padding: 100px 0 60px;
+            min-height: 100vh;
+        }
+
+        .dash-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .dash-header h1 {
+            font-size: 1.8rem;
+        }
+
+        .dash-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* Stats Cards */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-card .stat-val {
+            font-size: 2rem;
+            font-weight: 800;
+            font-family: var(--font-mono);
+        }
+
+        .stat-card .stat-lbl {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-cyan .stat-val {
+            color: var(--accent-cyan);
+        }
+
+        .stat-green .stat-val {
+            color: var(--accent-green);
+        }
+
+        .stat-amber .stat-val {
+            color: var(--accent-amber);
+        }
+
+        .stat-red .stat-val {
+            color: var(--accent-red);
+        }
+
+        .stat-purple .stat-val {
+            color: var(--accent-purple);
+        }
+
+        /* Filters */
+        .filters-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-input);
+            border-radius: var(--radius-sm);
+            padding: 4px;
+        }
+
+        .filter-tab {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .filter-tab.active {
+            background: var(--accent-cyan);
+            color: #000;
+            font-weight: 600;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            background: var(--bg-secondary);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .data-table tbody tr {
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(0, 212, 255, 0.03);
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--accent-amber);
+        }
+
+        .status-approved {
+            background: rgba(34, 197, 94, 0.12);
+            color: var(--accent-green);
+        }
+
+        .status-rejected {
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--accent-red);
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font-display);
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-approve {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--accent-green);
+        }
+
+        .btn-reject {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+        }
+
+        .btn-edit {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-blue);
+        }
+
+        /* Detail Panel */
+        .detail-row {
+            display: none;
+        }
+
+        .detail-row.open {
+            display: table-row;
+        }
+
+        .detail-cell {
+            padding: 20px !important;
+            background: rgba(15, 22, 41, 0.6);
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .detail-item label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .detail-item p {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* Edit Modal */
+        .edit-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .edit-modal-overlay.active {
+            display: flex;
+        }
+
+        .edit-modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .edit-modal h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+        }
+
+        .edit-modal .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .edit-modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .emoji {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                padding: 80px 0 40px;
+            }
+
+            .stats-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dash-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .dash-actions {
+                width: 100%;
+            }
+
+            .dash-actions .btn-outline,
+            .dash-actions .btn-primary {
+                flex: 1;
+                text-align: center;
+            }
+
+            .filters-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-tabs {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .search-input {
+                min-width: unset;
+                width: 100%;
+            }
+
+            /* Mobile card layout for table */
+            .table-wrapper {
+                border: none;
+                background: none;
+            }
+
+            .data-table thead {
+                display: none;
+            }
+
+            .data-table,
+            .data-table tbody,
+            .data-table tr,
+            .data-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .data-table tbody tr {
+                background: var(--bg-secondary);
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 12px;
+            }
+
+            .data-table td {
+                padding: 4px 0;
+                border-bottom: none;
+                white-space: normal;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .data-table td::before {
+                content: attr(data-label);
+                font-size: 0.75rem;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                font-weight: 600;
+                min-width: 90px;
+            }
+
+            .data-table td:last-child {
+                margin-top: 12px;
+                padding-top: 12px;
+                border-top: 1px solid var(--border-color);
+                justify-content: center;
+            }
+
+            .action-btns {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .action-btn {
+                flex: 1;
+                text-align: center;
+                padding: 10px 8px;
+            }
+
+            /* Detail rows in mobile */
+            .detail-row td {
+                padding: 16px 0 !important;
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Edit modal mobile */
+            .edit-modal {
+                padding: 24px 16px;
+                width: 95%;
+            }
+
+            .edit-modal .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            /* Login */
+            .login-box h1 {
+                font-size: 1.6rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-cards {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 14px;
+            }
+
+            .stat-card .stat-val {
+                font-size: 1.5rem;
+            }
+
+            .filter-tabs {
+                flex-wrap: wrap;
+            }
+
+            .filter-tab {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h1>⚡ <span class="gradient-text">Admin</span></h1>
+            <p>Enter admin password to access the dashboard</p>
+            <input type="password" class="form-control" id="adminPassword" placeholder="••••••••" autofocus>
+            <p class="login-error" id="loginError">Incorrect password. Try again.</p>
+            <button class="btn-primary" onclick="attemptLogin()" style="width:100%;">Access Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar scrolled">
+        <div class="nav-content">
+            <a href="/" class="nav-logo">⚡ <span>Scope 2K26</span></a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/register">Registrations</a></li>
+                <li><a href="#" onclick="logout()" style="color:var(--accent-red);">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Dashboard -->
+    <div class="dashboard" id="dashboard">
+        <div class="container">
+            <div class="dash-header">
+                <div>
+                    <h1>📊 Dashboard</h1>
+                    <p style="color:var(--text-muted);font-size:0.9rem;">Manage all team registrations</p>
+                </div>
+                <div class="dash-actions">
+                    <button class="btn-outline btn-sm" onclick="loadData()">🔄 Refresh</button>
+                    <button class="btn-primary btn-sm" onclick="exportExcel()">📥 Export Excel</button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-cards" id="statsCards">
+                <div class="glass-card stat-card stat-cyan">
+                    <div class="stat-val" id="statTotal">0</div>
+                    <div class="stat-lbl">Total Teams</div>
+                </div>
+                <div class="glass-card stat-card stat-green">
+                    <div class="stat-val" id="statApproved">0</div>
+                    <div class="stat-lbl">Approved</div>
+                </div>
+                <div class="glass-card stat-card stat-amber">
+                    <div class="stat-val" id="statPending">0</div>
+                    <div class="stat-lbl">Pending</div>
+                </div>
+                <div class="glass-card stat-card stat-red">
+                    <div class="stat-val" id="statRejected">0</div>
+                    <div class="stat-lbl">Rejected</div>
+                </div>
+                <div class="glass-card stat-card stat-purple">
+                    <div class="stat-val" id="statRevenue">₹0</div>
+                    <div class="stat-lbl">Revenue</div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-bar">
+                <div class="filter-tabs">
+                    <button class="filter-tab active" data-filter="all">All</button>
+                    <button class="filter-tab" data-filter="pending">Pending</button>
+                    <button class="filter-tab" data-filter="approved">Approved</button>
+                    <button class="filter-tab" data-filter="rejected">Rejected</button>
+                </div>
+                <input type="text" class="search-input" id="searchInput"
+                    placeholder="🔍 Search by team name or lead...">
+            </div>
+
+            <!-- Table -->
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Team ID</th>
+                            <th>Team Name</th>
+                            <th>Lead</th>
+                            <th>Size</th>
+                            <th>Email</th>
+                            <th>Txn ID</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="empty-state" id="emptyState" style="display:none;">
+                <div class="emoji">📋</div>
+                <h3>No registrations found</h3>
+                <p>Registrations will appear here once teams register.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="edit-modal-overlay" id="editModal">
+        <div class="edit-modal">
+            <h2>✏️ Edit Registration</h2>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Team Name</label>
+                        <input type="text" class="form-control" id="editTeamName">
+                    </div>
+                    <div class="form-group">
+                        <label>Team Lead</label>
+                        <input type="text" class="form-control" id="editTeamLead">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" class="form-control" id="editEmail">
+                    </div>
+                    <div class="form-group">
+                        <label>Transaction ID</label>
+                        <input type="text" class="form-control" id="editTxnId">
+                    </div>
+                </div>
+                <div class="edit-modal-actions">
+                    <button type="button" class="btn-outline btn-sm" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn-primary btn-sm">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allData = [];
+        let currentFilter = 'all';
+        const ADMIN_PASS = 'scope2k26admin'; // This should match .env for real security
+
+        // --- Auth ---
+        function attemptLogin() {
+            const pwd = document.getElementById('adminPassword').value;
+            if (pwd === ADMIN_PASS) {
+                document.getElementById('loginOverlay').classList.add('hidden');
+                sessionStorage.setItem('admin_auth', 'true');
+                loadData();
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+                document.getElementById('adminPassword').value = '';
+            }
+        }
+
+        document.getElementById('adminPassword').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') attemptLogin();
+        });
+
+        function logout() {
+            sessionStorage.removeItem('admin_auth');
+            document.getElementById('loginOverlay').classList.remove('hidden');
+        }
+
+        // Auto-login if session exists
+        if (sessionStorage.getItem('admin_auth') === 'true') {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            loadData();
+        }
+
+        // --- Data ---
+        async function loadData() {
+            try {
+                const [regRes, statsRes] = await Promise.all([
+                    fetch('/api/registrations'),
+                    fetch('/api/stats')
+                ]);
+                const regData = await regRes.json();
+                const statsData = await statsRes.json();
+
+                allData = regData.data || [];
+                updateStats(statsData.stats || {});
+                renderTable();
+            } catch (err) {
+                showToast('Failed to load data', 'error');
+            }
+        }
+
+        function updateStats(stats) {
+            document.getElementById('statTotal').textContent = stats.total || 0;
+            document.getElementById('statApproved').textContent = stats.approved || 0;
+            document.getElementById('statPending').textContent = stats.pending || 0;
+            document.getElementById('statRejected').textContent = stats.rejected || 0;
+            document.getElementById('statRevenue').textContent = '₹' + (stats.revenue || 0).toLocaleString();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = allData;
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(r => r.status === currentFilter);
+            }
+            if (search) {
+                filtered = filtered.filter(r =>
+                    (r.teamName || '').toLowerCase().includes(search) ||
+                    (r.teamLead || '').toLowerCase().includes(search) ||
+                    (r.teamId || '').toLowerCase().includes(search)
+                );
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                document.getElementById('emptyState').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('emptyState').style.display = 'none';
+
+            tbody.innerHTML = filtered.map(r => {
+                const statusClass = `status-${r.status}`;
+                const teamIdDisplay = r.teamId || '—';
+                const memberDetails = [];
+                for (let i = 1; i <= (parseInt(r.teamSize) || 1); i++) {
+                    if (r[`member${i}_name`]) {
+                        memberDetails.push(`
+                        <div class="detail-item">
+                            <label>Member ${i}</label>
+                            <p>${r[`member${i}_name`]} • Year ${r[`member${i}_year`] || '?'} • ${r[`member${i}_branch`] || '?'} • ${r[`member${i}_phone`] || '?'}</p>
+                        </div>
+                    `);
+                    }
+                }
+
+                return `
+                <tr onclick="toggleDetail('detail-${r.id}')">
+                    <td data-label="Team ID"><strong style="color:var(--accent-cyan);">${teamIdDisplay}</strong></td>
+                    <td data-label="Team Name">${r.teamName || ''}</td>
+                    <td data-label="Lead">${r.teamLead || ''}</td>
+                    <td data-label="Size">${r.teamSize || ''}</td>
+                    <td data-label="Email" style="font-size:0.8rem;">${r.email || ''}</td>
+                    <td data-label="Txn ID" style="font-size:0.8rem;font-family:var(--font-mono);">${r.transactionId || ''}</td>
+                    <td data-label="Status"><span class="status-badge ${statusClass}">${r.status || 'pending'}</span></td>
+                    <td data-label="">
+                        <div class="action-btns" onclick="event.stopPropagation();">
+                            ${r.status === 'pending' ? `
+                                <button class="action-btn btn-approve" onclick="approveReg('${r.id}')">✓ Approve</button>
+                                <button class="action-btn btn-reject" onclick="rejectReg('${r.id}')">✕ Reject</button>
+                            ` : ''}
+                            <button class="action-btn btn-edit" onclick="openEdit('${r.id}')">✏️ Edit</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="detail-row" id="detail-${r.id}">
+                    <td colspan="8" class="detail-cell">
+                        <div class="detail-grid">
+                            <div class="detail-item"><label>Registered At</label><p>${r.registeredAt ? new Date(r.registeredAt).toLocaleString() : '—'}</p></div>
+                            ${memberDetails.join('')}
+                        </div>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        function toggleDetail(id) {
+            const row = document.getElementById(id);
+            if (row) row.classList.toggle('open');
+        }
+
+        // --- Actions ---
+        async function approveReg(id) {
+            if (!confirm('Approve this registration? An approval email with Team ID will be sent.')) return;
+            try {
+                const res = await fetch(`/api/registrations/${id}/approve`, { method: 'PUT' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`Approved! Team ID: ${data.teamId}`, 'success');
+                    loadData();
+                } else {
+                    showToast(data.message || 'Failed to approve', 'error');
+                }
+            } catch (err) {
+                showToast('Network error', 'error');
+            }
+        }
+
+        async function rejectReg(id) {
+            if (!confirm('Reject this registration? A rejection email will be sent.')) return;
+            try {
+                const res = await fetch(`/api/registrations/${id}/reject`, { method: 'PUT' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Registration rejected.', 'info');
+                    loadData();
+                } else {
+                    showToast(data.message || 'Failed to reject', 'error');
+                }
+            } catch (err) {
+                showToast('Network error', 'error');
+            }
+        }
+
+        function openEdit(id) {
+            const reg = allData.find(r => r.id == id);
+            if (!reg) return;
+            document.getElementById('editId').value = reg.id;
+            document.getElementById('editTeamName').value = reg.teamName || '';
+            document.getElementById('editTeamLead').value = reg.teamLead || '';
+            document.getElementById('editEmail').value = reg.email || '';
+            document.getElementById('editTxnId').value = reg.transactionId || '';
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editId').value;
+            try {
+                const res = await fetch(`/api/registrations/${id}/edit`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        teamName: document.getElementById('editTeamName').value,
+                        teamLead: document.getElementById('editTeamLead').value,
+                        email: document.getElementById('editEmail').value,
+                        transactionId: document.getElementById('editTxnId').value
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Updated successfully!', 'success');
+                    closeEditModal();
+                    loadData();
+                } else {
+                    showToast(data.message || 'Update failed', 'error');
+                }
+            } catch (err) {
+                showToast('Network error', 'error');
+            }
+        });
+
+        // --- Filters ---
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentFilter = tab.dataset.filter;
+                renderTable();
+            });
+        });
+
+        document.getElementById('searchInput').addEventListener('input', renderTable);
+
+        // --- Export ---
+        function exportExcel() {
+            window.location.href = '/api/export';
+        }
+
+        // --- Toast ---
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        // Close edit modal on overlay click
+        document.getElementById('editModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('editModal')) closeEditModal();
+        });
+    </script>
+
+</body>
+
+</html>
