@@ -7,6 +7,7 @@
     <title>Register — Scope 2K26</title>
     <meta name="description" content="Register your team for Scope 2K26. ₹400 per team, 1-4 members.">
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="scope-logo.jpeg" type="image/jpeg">
     <style>
         .register-page {
             padding: 120px 0 80px;
@@ -639,7 +640,8 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    document.getElementById('successModal').classList.add('active');
+                    // Redirect to Google Form
+                    window.location.href = 'https://docs.google.com/forms/d/e/1FAIpQLScCyGsSnys8x-Bj4YDUbzlZrAWXP84pvZRsR4cqgv18nLdjsw/viewform?usp=header';
                 } else {
                     showToast(data.message || 'Registration failed. Please try again.', 'error');
                     submitBtn.disabled = false;
