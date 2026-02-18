@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // --- MongoDB Connection ---
 mongoose.connect(process.env.MONGO_URL)
@@ -489,9 +489,9 @@ app.get('/verify/:teamId', async (req, res) => {
 });
 
 // Serve frontend
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'register.html')));
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'public', 'register.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
 // Export for Vercel
 module.exports = app;
