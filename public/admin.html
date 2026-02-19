@@ -297,25 +297,61 @@
         .detail-cell {
             padding: 20px !important;
             background: rgba(15, 22, 41, 0.6);
+            white-space: normal !important;
         }
 
         .detail-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .detail-item {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px 16px;
         }
 
         .detail-item label {
             font-size: 0.75rem;
-            color: var(--text-muted);
+            color: var(--accent-cyan);
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 8px;
         }
 
         .detail-item p {
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             color: var(--text-primary);
             font-weight: 500;
+            line-height: 1.7;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .detail-item .member-field {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .detail-item .member-field:last-child {
+            border-bottom: none;
+        }
+
+        .detail-item .member-field .field-label {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+        }
+
+        .detail-item .member-field .field-value {
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-weight: 600;
         }
 
         /* Edit Modal */
@@ -757,8 +793,11 @@
                     if (r[`member${i}_name`]) {
                         memberDetails.push(`
                         <div class="detail-item">
-                            <label>Member ${i}</label>
-                            <p>${r[`member${i}_name`]} • Year ${r[`member${i}_year`] || '?'} • ${r[`member${i}_branch`] || '?'} • ${r[`member${i}_phone`] || '?'}</p>
+                            <label>👤 Member ${i}${i === 1 ? ' (Lead)' : ''}</label>
+                            <div class="member-field"><span class="field-label">Name</span><span class="field-value">${r[`member${i}_name`]}</span></div>
+                            <div class="member-field"><span class="field-label">Year</span><span class="field-value">${r[`member${i}_year`] || '—'}</span></div>
+                            <div class="member-field"><span class="field-label">Branch</span><span class="field-value">${r[`member${i}_branch`] || '—'}</span></div>
+                            <div class="member-field"><span class="field-label">Phone</span><span class="field-value">${r[`member${i}_phone`] || '—'}</span></div>
                         </div>
                     `);
                     }
