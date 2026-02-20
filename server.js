@@ -167,7 +167,7 @@ async function sendApprovalEmail(registration, baseUrl) {
 
             <!-- QR Code -->
             <div style="background:#ffffff;border-radius:16px;padding:24px;display:inline-block;margin-bottom:24px;">
-                <img src="${qrDataUrl}" alt="Team QR Code" style="width:220px;height:220px;display:block;" />
+                <img src="cid:teamqrcode" alt="Team QR Code" style="width:220px;height:220px;display:block;" />
                 <p style="margin:12px 0 0;color:#374151;font-size:12px;font-weight:600;">Scan this QR at the event for verification</p>
             </div>
 
@@ -247,7 +247,8 @@ async function sendApprovalEmail(registration, baseUrl) {
             attachments: [{
                 filename: `${registration.teamId}-qr.png`,
                 content: qrBuffer,
-                contentType: 'image/png'
+                contentType: 'image/png',
+                cid: 'teamqrcode'
             }]
         });
         console.log(`✅ Approval email with QR sent to ${registration.email}`);
