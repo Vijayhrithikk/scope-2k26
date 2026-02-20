@@ -444,64 +444,159 @@ app.get('/api/export', async (req, res) => {
     }
 });
 
-// Verify Page
-app.get('/verify/:teamId', async (req, res) => {
-    try {
-        const reg = await Registration.findOne({ teamId: req.params.teamId });
+// Verify Page — Admin Protected
+app.get('/verify/:teamId', (req, res) => {
+    const teamId = req.params.teamId;
+    res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Verify — Scope 2K26</title>
+        <link rel="icon" href="/scope-logo-circle.png" type="image/png">
+        <style>
+            *{margin:0;padding:0;box-sizing:border-box;}
+            body{font-family:'Segoe UI',sans-serif;background:#050816;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+            .container{max-width:500px;width:100%;}
 
-        if (!reg) {
-            return res.send(`
-            <!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Not Found</title></head>
-            <body style="background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;">
-                <div style="text-align:center;"><h1>❌ Team Not Found</h1><p>ID: ${req.params.teamId}</p></div>
-            </body></html>`);
-        }
+            /* Login View */
+            .login-view{text-align:center;}
+            .login-view .icon{font-size:3rem;margin-bottom:16px;}
+            .login-view h1{font-size:1.5rem;color:#00d4ff;margin-bottom:6px;}
+            .login-view p{color:#94a3b8;font-size:0.9rem;margin-bottom:24px;}
+            .login-view input{width:100%;padding:14px 18px;background:#0f172a;border:1px solid #1e293b;border-radius:10px;color:#e2e8f0;font-size:1.1rem;text-align:center;letter-spacing:2px;outline:none;margin-bottom:12px;}
+            .login-view input:focus{border-color:#00d4ff;box-shadow:0 0 15px rgba(0,212,255,0.15);}
+            .login-view button{width:100%;padding:14px;background:linear-gradient(135deg,#00d4ff,#8b5cf6);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;transition:transform 0.2s;}
+            .login-view button:hover{transform:scale(1.02);}
+            .login-error{color:#ef4444;font-size:0.85rem;margin-top:8px;display:none;}
+            .badge-id{display:inline-block;padding:6px 16px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);border-radius:50px;font-family:monospace;font-weight:700;color:#00d4ff;font-size:0.95rem;margin-bottom:20px;}
 
-        const team = formatReg(reg);
-        const statusColor = team.status === 'approved' ? '#22c55e' : '#ef4444';
-
-        let memberRows = '';
-        // Helper to format members
-        // reuse existing logic or simple loop
-        // We have member1_name etc in formatted team object
-        for (let i = 1; i <= 4; i++) {
-            if (team[`member${i}_name`]) {
-                memberRows += `<tr><td style="padding:8px;border-bottom:1px solid #333;">${team[`member${i}_name`]}</td><td style="padding:8px;border-bottom:1px solid #333;">${team[`member${i}_phone`]}</td></tr>`;
-            }
-        }
-
-        res.send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Verify ${team.teamId}</title>
-            <style>
-                body{font-family:'Segoe UI',sans-serif;background:#050816;color:#e2e8f0;padding:20px;max-width:600px;margin:0 auto;}
-                .card{background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:24px;}
-                .status{display:inline-block;padding:4px 12px;border-radius:20px;background:${statusColor}20;color:${statusColor};font-weight:bold;}
-                h1{color:#00d4ff;margin:10px 0;}
-                table{width:100%;border-collapse:collapse;margin-top:20px;}
-                .btn{display:block;width:100%;padding:16px;background:#22c55e;color:#fff;border:none;border-radius:8px;font-size:18px;margin-top:20px;cursor:pointer;}
-            </style>
-        </head>
-        <body>
-            <div class="card">
-                <div class="status">${team.status.toUpperCase()}</div>
-                <h1>${team.teamId}</h1>
-                <p><strong>${team.teamName}</strong></p>
-                <p>Lead: ${team.teamLead}</p>
-                <table>
-                    <tr><th style="text-align:left;color:#888;">Name</th><th style="text-align:left;color:#888;">Phone</th></tr>
-                    ${memberRows}
-                </table>
-                <button class="btn" onclick="this.innerHTML='✅ Checked In';this.style.background='#475569'">Check In</button>
+            /* Team View */
+            .team-view{display:none;}
+            .card{background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:28px;margin-bottom:16px;}
+            .status-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+            .status-badge{padding:6px 16px;border-radius:50px;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;}
+            .status-approved{background:rgba(34,197,94,0.12);color:#22c55e;}
+            .status-pending{background:rgba(245,158,11,0.12);color:#f59e0b;}
+            .status-rejected{background:rgba(239,68,68,0.12);color:#ef4444;}
+            .team-id{font-family:monospace;font-size:1.6rem;font-weight:900;color:#00d4ff;margin-bottom:4px;}
+            .team-name{font-size:1.1rem;font-weight:600;margin-bottom:4px;}
+            .team-lead{color:#94a3b8;font-size:0.9rem;}
+            .divider{border:none;border-top:1px solid #1e293b;margin:20px 0;}
+            .members-title{font-size:0.8rem;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;font-weight:700;margin-bottom:12px;}
+            .member-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(15,23,42,0.6);border:1px solid #1e293b;border-radius:10px;margin-bottom:8px;}
+            .member-row .name{font-weight:600;font-size:0.9rem;}
+            .member-row .phone{color:#94a3b8;font-size:0.85rem;font-family:monospace;}
+            .checkin-btn{display:block;width:100%;padding:16px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all 0.3s;}
+            .checkin-btn:hover{background:#16a34a;transform:scale(1.02);}
+            .checkin-btn.checked{background:#475569;cursor:default;}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <!-- Login -->
+            <div class="login-view" id="loginView">
+                <div class="icon">🔒</div>
+                <h1>Admin Verification</h1>
+                <p>Enter admin password to view team details</p>
+                <div class="badge-id">${teamId}</div>
+                <input type="password" id="adminPwd" placeholder="••••••••" autofocus>
+                <button onclick="verifyAdmin()">Unlock & Verify</button>
+                <p class="login-error" id="loginError">Incorrect password. Try again.</p>
             </div>
-        </body>
-        </html>`);
+
+            <!-- Team Details (hidden until auth) -->
+            <div class="team-view" id="teamView"></div>
+        </div>
+
+        <script>
+            const TEAM_ID = '${teamId}';
+
+            document.getElementById('adminPwd').addEventListener('keypress', e => {
+                if (e.key === 'Enter') verifyAdmin();
+            });
+
+            async function verifyAdmin() {
+                const pwd = document.getElementById('adminPwd').value;
+                if (!pwd) return;
+
+                try {
+                    const res = await fetch('/api/verify/' + TEAM_ID, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: pwd })
+                    });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        renderTeam(data.team);
+                    } else {
+                        document.getElementById('loginError').style.display = 'block';
+                        document.getElementById('adminPwd').value = '';
+                    }
+                } catch (err) {
+                    document.getElementById('loginError').textContent = 'Network error.';
+                    document.getElementById('loginError').style.display = 'block';
+                }
+            }
+
+            function renderTeam(t) {
+                document.getElementById('loginView').style.display = 'none';
+                const tv = document.getElementById('teamView');
+                tv.style.display = 'block';
+
+                const statusClass = 'status-' + t.status;
+                let memberHTML = '';
+                for (let i = 1; i <= 4; i++) {
+                    if (t['member' + i + '_name']) {
+                        memberHTML += '<div class="member-row"><span class="name">' + t['member' + i + '_name'] + '</span><span class="phone">' + (t['member' + i + '_phone'] || '—') + '</span></div>';
+                    }
+                }
+
+                tv.innerHTML =
+                    '<div class="card">' +
+                        '<div class="status-bar"><span class="status-badge ' + statusClass + '">' + t.status.toUpperCase() + '</span></div>' +
+                        '<div class="team-id">' + t.teamId + '</div>' +
+                        '<div class="team-name">' + t.teamName + '</div>' +
+                        '<div class="team-lead">Lead: ' + t.teamLead + '</div>' +
+                        '<hr class="divider">' +
+                        '<div class="members-title">Team Members</div>' +
+                        memberHTML +
+                    '</div>' +
+                    '<button class="checkin-btn" id="checkinBtn" onclick="checkIn()">✅ Check In Team</button>';
+            }
+
+            function checkIn() {
+                const btn = document.getElementById('checkinBtn');
+                btn.innerHTML = '✅ Checked In';
+                btn.classList.add('checked');
+                btn.onclick = null;
+            }
+        </script>
+    </body>
+    </html>`);
+});
+
+// API: Verify team with admin password
+app.post('/api/verify/:teamId', async (req, res) => {
+    try {
+        const { password } = req.body;
+        const adminPass = process.env.ADMIN_PASSWORD || 'scope2k26admin';
+
+        if (password !== adminPass) {
+            return res.status(401).json({ success: false, message: 'Incorrect password.' });
+        }
+
+        const reg = await Registration.findOne({ teamId: req.params.teamId });
+        if (!reg) {
+            return res.status(404).json({ success: false, message: 'Team not found.' });
+        }
+
+        res.json({ success: true, team: formatReg(reg) });
     } catch (err) {
-        res.status(500).send('Server Error');
+        console.error('Verify error:', err);
+        res.status(500).json({ success: false, message: 'Server error.' });
     }
 });
 
