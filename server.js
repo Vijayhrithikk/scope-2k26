@@ -6,7 +6,11 @@ const nodemailer = require('nodemailer');
 const QRCode = require('qrcode');
 const path = require('path');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const Registration = require('./models/Registration'); // Import our model
+
+const JWT_SECRET = process.env.JWT_SECRET || 'scope2k26-secret-key';
+const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'scope2k26admin';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -444,7 +448,32 @@ app.get('/api/export', async (req, res) => {
     }
 });
 
-// Verify Page — Admin Protected
+// --- Admin Login (returns JWT token) ---
+app.post('/api/admin/login', (req, res) => {
+    const { password } = req.body;
+    if (password !== ADMIN_PASS) {
+        return res.status(401).json({ success: false, message: 'Incorrect password.' });
+    }
+    const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
+    res.json({ success: true, token });
+});
+
+// --- Middleware: Verify JWT token ---
+function verifyToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) return res.status(401).json({ success: false, message: 'No token provided.' });
+
+    const token = authHeader.split(' ')[1]; // "Bearer <token>"
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.admin = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ success: false, message: 'Invalid or expired token.' });
+    }
+}
+
+// Verify Page — Admin Protected (with token auto-login)
 app.get('/verify/:teamId', (req, res) => {
     const teamId = req.params.teamId;
     res.send(`
@@ -459,9 +488,11 @@ app.get('/verify/:teamId', (req, res) => {
             *{margin:0;padding:0;box-sizing:border-box;}
             body{font-family:'Segoe UI',sans-serif;background:#050816;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
             .container{max-width:500px;width:100%;}
+            .loading{text-align:center;color:#94a3b8;font-size:0.95rem;}
+            .loading .spinner{width:32px;height:32px;border:3px solid #1e293b;border-top-color:#00d4ff;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;}
+            @keyframes spin{to{transform:rotate(360deg);}}
 
-            /* Login View */
-            .login-view{text-align:center;}
+            .login-view{text-align:center;display:none;}
             .login-view .icon{font-size:3rem;margin-bottom:16px;}
             .login-view h1{font-size:1.5rem;color:#00d4ff;margin-bottom:6px;}
             .login-view p{color:#94a3b8;font-size:0.9rem;margin-bottom:24px;}
@@ -472,7 +503,6 @@ app.get('/verify/:teamId', (req, res) => {
             .login-error{color:#ef4444;font-size:0.85rem;margin-top:8px;display:none;}
             .badge-id{display:inline-block;padding:6px 16px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);border-radius:50px;font-family:monospace;font-weight:700;color:#00d4ff;font-size:0.95rem;margin-bottom:20px;}
 
-            /* Team View */
             .team-view{display:none;}
             .card{background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:28px;margin-bottom:16px;}
             .status-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
@@ -495,18 +525,24 @@ app.get('/verify/:teamId', (req, res) => {
     </head>
     <body>
         <div class="container">
-            <!-- Login -->
+            <!-- Loading (shown while checking token) -->
+            <div class="loading" id="loadingView">
+                <div class="spinner"></div>
+                <p>Checking authorization...</p>
+            </div>
+
+            <!-- Login (shown if no valid token) -->
             <div class="login-view" id="loginView">
                 <div class="icon">🔒</div>
                 <h1>Admin Verification</h1>
                 <p>Enter admin password to view team details</p>
                 <div class="badge-id">${teamId}</div>
-                <input type="password" id="adminPwd" placeholder="••••••••" autofocus>
-                <button onclick="verifyAdmin()">Unlock & Verify</button>
+                <input type="password" id="adminPwd" placeholder="••••••••">
+                <button onclick="loginAndVerify()">Unlock & Verify</button>
                 <p class="login-error" id="loginError">Incorrect password. Try again.</p>
             </div>
 
-            <!-- Team Details (hidden until auth) -->
+            <!-- Team Details -->
             <div class="team-view" id="teamView"></div>
         </div>
 
@@ -514,26 +550,67 @@ app.get('/verify/:teamId', (req, res) => {
             const TEAM_ID = '${teamId}';
 
             document.getElementById('adminPwd').addEventListener('keypress', e => {
-                if (e.key === 'Enter') verifyAdmin();
+                if (e.key === 'Enter') loginAndVerify();
             });
 
-            async function verifyAdmin() {
+            // On page load: check if we have a stored token
+            (async function init() {
+                const token = localStorage.getItem('admin_token');
+                if (token) {
+                    // Try to fetch team with stored token
+                    const ok = await fetchTeamWithToken(token);
+                    if (ok) return; // Success — team is displayed
+                    // Token expired or invalid — clear it
+                    localStorage.removeItem('admin_token');
+                }
+                // No valid token — show login
+                document.getElementById('loadingView').style.display = 'none';
+                document.getElementById('loginView').style.display = 'block';
+                document.getElementById('adminPwd').focus();
+            })();
+
+            async function fetchTeamWithToken(token) {
+                try {
+                    const res = await fetch('/api/verify/' + TEAM_ID, {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        document.getElementById('loadingView').style.display = 'none';
+                        renderTeam(data.team);
+                        return true;
+                    }
+                } catch (e) {}
+                return false;
+            }
+
+            async function loginAndVerify() {
                 const pwd = document.getElementById('adminPwd').value;
                 if (!pwd) return;
 
                 try {
-                    const res = await fetch('/api/verify/' + TEAM_ID, {
+                    // Step 1: Login to get token
+                    const loginRes = await fetch('/api/admin/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ password: pwd })
                     });
-                    const data = await res.json();
+                    const loginData = await loginRes.json();
 
-                    if (data.success) {
-                        renderTeam(data.team);
-                    } else {
+                    if (!loginData.success) {
                         document.getElementById('loginError').style.display = 'block';
                         document.getElementById('adminPwd').value = '';
+                        return;
+                    }
+
+                    // Step 2: Store token
+                    localStorage.setItem('admin_token', loginData.token);
+
+                    // Step 3: Fetch team with token
+                    const ok = await fetchTeamWithToken(loginData.token);
+                    if (!ok) {
+                        document.getElementById('loginError').textContent = 'Team not found.';
+                        document.getElementById('loginError').style.display = 'block';
                     }
                 } catch (err) {
                     document.getElementById('loginError').textContent = 'Network error.';
@@ -550,7 +627,7 @@ app.get('/verify/:teamId', (req, res) => {
                 let memberHTML = '';
                 for (let i = 1; i <= 4; i++) {
                     if (t['member' + i + '_name']) {
-                        memberHTML += '<div class="member-row"><span class="name">' + t['member' + i + '_name'] + '</span><span class="phone">' + (t['member' + i + '_phone'] || '—') + '</span></div>';
+                        memberHTML += '<div class="member-row"><span class="name">' + t['member' + i + '_name'] + '</span><span class="phone">' + (t['member' + i + '_phone'] || '\u2014') + '</span></div>';
                     }
                 }
 
@@ -564,12 +641,12 @@ app.get('/verify/:teamId', (req, res) => {
                         '<div class="members-title">Team Members</div>' +
                         memberHTML +
                     '</div>' +
-                    '<button class="checkin-btn" id="checkinBtn" onclick="checkIn()">✅ Check In Team</button>';
+                    '<button class="checkin-btn" id="checkinBtn" onclick="checkIn()">\u2705 Check In Team</button>';
             }
 
             function checkIn() {
                 const btn = document.getElementById('checkinBtn');
-                btn.innerHTML = '✅ Checked In';
+                btn.innerHTML = '\u2705 Checked In';
                 btn.classList.add('checked');
                 btn.onclick = null;
             }
@@ -578,21 +655,13 @@ app.get('/verify/:teamId', (req, res) => {
     </html>`);
 });
 
-// API: Verify team with admin password
-app.post('/api/verify/:teamId', async (req, res) => {
+// API: Verify team (token-protected)
+app.get('/api/verify/:teamId', verifyToken, async (req, res) => {
     try {
-        const { password } = req.body;
-        const adminPass = process.env.ADMIN_PASSWORD || 'scope2k26admin';
-
-        if (password !== adminPass) {
-            return res.status(401).json({ success: false, message: 'Incorrect password.' });
-        }
-
         const reg = await Registration.findOne({ teamId: req.params.teamId });
         if (!reg) {
             return res.status(404).json({ success: false, message: 'Team not found.' });
         }
-
         res.json({ success: true, team: formatReg(reg) });
     } catch (err) {
         console.error('Verify error:', err);
