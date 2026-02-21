@@ -211,7 +211,7 @@ async function sendApprovalEmail(registration, baseUrl) {
                         <td style="padding:10px 0;color:#f1f5f9;font-size:14px;border-top:1px solid #1e293b;">${registration.teamSize} Member${parseInt(registration.teamSize) > 1 ? 's' : ''}</td>
                     </tr>
                     <tr>
-                        <td style="padding:10px 0;color:#64748b;font-size:13px;border-top:1px solid #1e293b;">Transaction ID</td>
+                        <td style="padding:10px 0;color:#64748b;font-size:13px;border-top:1px solid #1e293b;">UTR No. / Transaction ID</td>
                         <td style="padding:10px 0;color:#f1f5f9;font-size:14px;border-top:1px solid #1e293b;font-family:monospace;">${registration.transactionId}</td>
                     </tr>
                 </table>

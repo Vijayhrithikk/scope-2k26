@@ -652,7 +652,7 @@
                             <th>Lead</th>
                             <th>Size</th>
                             <th>Email</th>
-                            <th>Txn ID</th>
+                            <th>UTR / Txn ID</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -692,7 +692,7 @@
                         <input type="email" class="form-control" id="editEmail">
                     </div>
                     <div class="form-group">
-                        <label>Transaction ID</label>
+                        <label>UTR No. / Transaction ID</label>
                         <input type="text" class="form-control" id="editTxnId">
                     </div>
                 </div>
@@ -828,7 +828,7 @@
                     <td data-label="Lead">${r.teamLead || ''}</td>
                     <td data-label="Size">${r.teamSize || ''}</td>
                     <td data-label="Email" style="font-size:0.8rem;">${r.email || ''}</td>
-                    <td data-label="Txn ID" style="font-size:0.8rem;font-family:var(--font-mono);">${r.transactionId || ''}</td>
+                    <td data-label="UTR / Txn ID" style="font-size:0.8rem;font-family:var(--font-mono);">${r.transactionId || ''}</td>
                     <td data-label="Status"><span class="status-badge ${statusClass}">${r.status || 'pending'}</span></td>
                     <td data-label="">
                         <div class="action-btns" onclick="event.stopPropagation();">
