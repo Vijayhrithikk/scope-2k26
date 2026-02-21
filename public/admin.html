@@ -836,6 +836,7 @@
                                 <button class="action-btn btn-approve" onclick="approveReg('${r.id}')">✓ Approve</button>
                                 <button class="action-btn btn-reject" onclick="rejectReg('${r.id}')">✕ Reject</button>
                             ` : ''}
+                            ${r.status === 'approved' ? `<button class="action-btn btn-approve" onclick="resendEmail('${r.id}')" style="font-size:0.7rem;">📧 Resend</button>` : ''}
                             <button class="action-btn btn-edit" onclick="openEdit('${r.id}')">✏️ Edit</button>
                         </div>
                     </td>
@@ -884,6 +885,21 @@
                     loadData();
                 } else {
                     showToast(data.message || 'Failed to reject', 'error');
+                }
+            } catch (err) {
+                showToast('Network error', 'error');
+            }
+        }
+
+        async function resendEmail(id) {
+            if (!confirm('Resend approval email to this team?')) return;
+            try {
+                const res = await fetch(`/api/registrations/${id}/resend-email`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message, 'success');
+                } else {
+                    showToast(data.message || 'Failed to resend', 'error');
                 }
             } catch (err) {
                 showToast('Network error', 'error');

@@ -396,6 +396,22 @@ app.put('/api/registrations/:id/reject', async (req, res) => {
     }
 });
 
+// Resend approval email
+app.post('/api/registrations/:id/resend-email', async (req, res) => {
+    try {
+        const reg = await Registration.findById(req.params.id);
+        if (!reg) return res.status(404).json({ success: false, message: 'Registration not found.' });
+        if (reg.status !== 'approved') return res.status(400).json({ success: false, message: 'Only approved teams can receive approval emails.' });
+
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        await sendApprovalEmail(reg, baseUrl);
+        res.json({ success: true, message: `Approval email resent to ${reg.email}` });
+    } catch (err) {
+        console.error('Resend error:', err);
+        res.status(500).json({ success: false, message: 'Failed to resend email.' });
+    }
+});
+
 // Edit
 app.put('/api/registrations/:id/edit', async (req, res) => {
     try {
