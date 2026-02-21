@@ -331,9 +331,29 @@ async function sendRejectionEmail(registration) {
 
 // --- API Routes ---
 
+// Check team name availability
+app.get('/api/check-teamname', async (req, res) => {
+    try {
+        const name = (req.query.name || '').trim();
+        if (!name) return res.json({ available: false });
+        const existing = await Registration.findOne({ teamName: { $regex: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+        res.json({ available: !existing });
+    } catch (err) {
+        res.json({ available: true }); // fail open
+    }
+});
+
 // Register
 app.post('/api/register', async (req, res) => {
     try {
+        const teamName = (req.body.teamName || '').trim();
+
+        // Case-insensitive duplicate check
+        const existing = await Registration.findOne({ teamName: { $regex: new RegExp(`^${teamName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+        if (existing) {
+            return res.status(400).json({ success: false, message: `Team name "${teamName}" is already taken. Please choose a different name.` });
+        }
+
         const members = [];
         if (req.body.members) {
             for (let i = 0; i < req.body.members.length; i++) {
@@ -342,7 +362,7 @@ app.post('/api/register', async (req, res) => {
         }
 
         const newReg = new Registration({
-            teamName: req.body.teamName,
+            teamName,
             teamLead: req.body.teamLead,
             teamSize: req.body.teamSize,
             email: req.body.email,

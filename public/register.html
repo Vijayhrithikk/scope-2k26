@@ -430,8 +430,15 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="teamName">Team Name *</label>
-                                <input type="text" id="teamName" class="form-control" placeholder="e.g. Code Crushers"
-                                    required>
+                                <div style="position:relative;">
+                                    <input type="text" id="teamName" class="form-control"
+                                        placeholder="e.g. Code Crushers" required oninput="checkTeamName(this.value)"
+                                        autocomplete="off">
+                                    <span id="teamNameStatus"
+                                        style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;"></span>
+                                </div>
+                                <small id="teamNameMsg"
+                                    style="font-size:12px;margin-top:4px;display:block;min-height:16px;"></small>
                             </div>
                             <div class="form-group">
                                 <label for="teamLead">Team Lead Name *</label>
@@ -547,6 +554,48 @@
             document.getElementById('navLinks').classList.toggle('active');
         });
 
+        // Team Name Availability Check
+        let teamNameTimer = null;
+        let teamNameAvailable = true;
+
+        function checkTeamName(value) {
+            const status = document.getElementById('teamNameStatus');
+            const msg = document.getElementById('teamNameMsg');
+            clearTimeout(teamNameTimer);
+            value = value.trim();
+            if (!value) {
+                status.textContent = '';
+                msg.textContent = '';
+                teamNameAvailable = true;
+                return;
+            }
+            status.textContent = '⏳';
+            status.style.color = '#64748b';
+            teamNameTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/api/check-teamname?name=${encodeURIComponent(value)}`);
+                    const data = await res.json();
+                    if (data.available) {
+                        status.textContent = '✓';
+                        status.style.color = '#22c55e';
+                        msg.style.color = '#22c55e';
+                        msg.textContent = 'Team name is available!';
+                        teamNameAvailable = true;
+                    } else {
+                        status.textContent = '✗';
+                        status.style.color = '#ef4444';
+                        msg.style.color = '#ef4444';
+                        msg.textContent = 'This team name is already taken.';
+                        teamNameAvailable = false;
+                    }
+                } catch (e) {
+                    status.textContent = '';
+                    msg.textContent = '';
+                    teamNameAvailable = true;
+                }
+            }, 500);
+        }
+
         // Dynamic Members
         const membersContainer = document.getElementById('membersContainer');
         const sizeRadios = document.querySelectorAll('input[name="teamSize"]');
@@ -608,6 +657,12 @@
         // Form Submit
         document.getElementById('registrationForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            // Block if team name is taken
+            if (!teamNameAvailable) {
+                showToast('This team name is already taken. Please choose a different name.', 'error');
+                return;
+            }
 
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
