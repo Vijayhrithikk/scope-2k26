@@ -4,7 +4,8 @@ const memberSchema = new mongoose.Schema({
     name: String,
     year: String,
     branch: String,
-    phone: String
+    phone: String,
+    rollNumber: String
 });
 
 const registrationSchema = new mongoose.Schema({

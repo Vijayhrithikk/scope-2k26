@@ -600,6 +600,8 @@
                 </div>
                 <div class="dash-actions">
                     <button class="btn-outline btn-sm" onclick="loadData()">🔄 Refresh</button>
+                    <button class="btn-outline btn-sm" onclick="sendUpdateLinks()" id="updateLinksBtn">📝 Send Roll#
+                        Links</button>
                     <button class="btn-primary btn-sm" onclick="exportExcel()">📥 Export Excel</button>
                 </div>
             </div>
@@ -795,6 +797,7 @@
                         <div class="detail-item">
                             <label>👤 Member ${i}${i === 1 ? ' (Lead)' : ''}</label>
                             <div class="member-field"><span class="field-label">Name</span><span class="field-value">${r[`member${i}_name`]}</span></div>
+                            <div class="member-field"><span class="field-label">Roll No</span><span class="field-value" style="font-family:var(--font-mono);">${r[`member${i}_rollNumber`] || '—'}</span></div>
                             <div class="member-field"><span class="field-label">Year</span><span class="field-value">${r[`member${i}_year`] || '—'}</span></div>
                             <div class="member-field"><span class="field-label">Branch</span><span class="field-value">${r[`member${i}_branch`] || '—'}</span></div>
                             <div class="member-field"><span class="field-label">Phone</span><span class="field-value">${r[`member${i}_phone`] || '—'}</span></div>
@@ -925,6 +928,31 @@
         });
 
         document.getElementById('searchInput').addEventListener('input', renderTable);
+
+        // --- Send Roll# Update Links ---
+        async function sendUpdateLinks() {
+            const btn = document.getElementById('updateLinksBtn');
+            if (!confirm('Send roll number update emails to all teams missing roll numbers?')) return;
+            btn.disabled = true;
+            btn.textContent = '📧 Sending...';
+            try {
+                const res = await fetch('/api/send-update-links', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ baseUrl: window.location.origin })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message, 'success');
+                } else {
+                    showToast(data.message || 'Failed.', 'error');
+                }
+            } catch (err) {
+                showToast('Network error.', 'error');
+            }
+            btn.disabled = false;
+            btn.textContent = '📝 Send Roll# Links';
+        }
 
         // --- Export ---
         function exportExcel() {

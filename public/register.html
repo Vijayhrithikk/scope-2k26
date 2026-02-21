@@ -589,6 +589,10 @@
                         <input type="tel" class="form-control member-phone" placeholder="+91 XXXXXXXXXX" data-index="${i}" required>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label>Roll Number *</label>
+                    <input type="text" class="form-control member-roll" placeholder="e.g. 23981a4926" data-index="${i}" required>
+                </div>
             `;
                 membersContainer.appendChild(card);
             }
@@ -618,6 +622,7 @@
                     year: document.querySelector(`.member-year[data-index="${i}"]`).value,
                     branch: document.querySelector(`.member-branch[data-index="${i}"]`).value,
                     phone: document.querySelector(`.member-phone[data-index="${i}"]`).value,
+                    rollNumber: document.querySelector(`.member-roll[data-index="${i}"]`).value,
                 });
             }
 

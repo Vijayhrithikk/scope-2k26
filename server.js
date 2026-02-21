@@ -63,18 +63,22 @@ function formatReg(doc) {
         member1_year: doc.members[0]?.year || '',
         member1_branch: doc.members[0]?.branch || '',
         member1_phone: doc.members[0]?.phone || '',
+        member1_rollNumber: doc.members[0]?.rollNumber || '',
         member2_name: doc.members[1]?.name || '',
         member2_year: doc.members[1]?.year || '',
         member2_branch: doc.members[1]?.branch || '',
         member2_phone: doc.members[1]?.phone || '',
+        member2_rollNumber: doc.members[1]?.rollNumber || '',
         member3_name: doc.members[2]?.name || '',
         member3_year: doc.members[2]?.year || '',
         member3_branch: doc.members[2]?.branch || '',
         member3_phone: doc.members[2]?.phone || '',
+        member3_rollNumber: doc.members[2]?.rollNumber || '',
         member4_name: doc.members[3]?.name || '',
         member4_year: doc.members[3]?.year || '',
         member4_branch: doc.members[3]?.branch || '',
-        member4_phone: doc.members[3]?.phone || ''
+        member4_phone: doc.members[3]?.phone || '',
+        member4_rollNumber: doc.members[3]?.rollNumber || ''
     };
 }
 
@@ -136,6 +140,7 @@ function getMemberRows(reg) {
         rows.push(`
             <tr>
                 <td style="padding:12px 16px;border-bottom:1px solid #1e293b;color:#e2e8f0;font-size:14px;">${m.name}</td>
+                <td style="padding:12px 16px;border-bottom:1px solid #1e293b;color:#94a3b8;font-size:14px;">${m.rollNumber || '—'}</td>
                 <td style="padding:12px 16px;border-bottom:1px solid #1e293b;color:#94a3b8;font-size:14px;">Year ${m.year}</td>
                 <td style="padding:12px 16px;border-bottom:1px solid #1e293b;color:#94a3b8;font-size:14px;">${m.branch}</td>
                 <td style="padding:12px 16px;border-bottom:1px solid #1e293b;color:#94a3b8;font-size:14px;">${m.phone}</td>
@@ -446,6 +451,184 @@ app.get('/api/export', async (req, res) => {
     } catch (err) {
         console.error('Export error:', err);
         res.status(500).json({ success: false, message: 'Export failed.' });
+    }
+});
+// --- Update Roll Number Page (public link sent to teams) ---
+app.get('/update-roll/:id', async (req, res) => {
+    try {
+        const reg = await Registration.findById(req.params.id);
+        if (!reg) return res.status(404).send('<h1>Team not found</h1>');
+
+        const memberInputs = reg.members.map((m, idx) => `
+            <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:20px;margin-bottom:12px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                    <div style="width:28px;height:28px;background:linear-gradient(135deg,#00d4ff,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;">${idx + 1}</div>
+                    <strong style="font-size:0.95rem;">${m.name}</strong>
+                    <span style="color:#64748b;font-size:0.8rem;">${m.branch} • Year ${m.year}</span>
+                </div>
+                <div style="display:flex;gap:12px;align-items:center;">
+                    <label style="color:#94a3b8;font-size:0.85rem;white-space:nowrap;">Roll No:</label>
+                    <input type="text" name="roll_${idx}" value="${m.rollNumber || ''}" placeholder="e.g. 23981a4926"
+                        style="flex:1;padding:10px 14px;background:#1e293b;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-size:0.95rem;font-family:monospace;outline:none;"
+                        onfocus="this.style.borderColor='#00d4ff'" onblur="this.style.borderColor='#334155'" required>
+                </div>
+            </div>
+        `).join('');
+
+        res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Update Roll Numbers — Scope 2K26</title>
+            <link rel="icon" href="/scope-logo-circle.png" type="image/png">
+            <style>
+                *{margin:0;padding:0;box-sizing:border-box;}
+                body{font-family:'Segoe UI',sans-serif;background:#050816;color:#e2e8f0;min-height:100vh;padding:40px 20px;}
+                .container{max-width:550px;margin:0 auto;}
+                h1{font-size:1.5rem;color:#00d4ff;margin-bottom:6px;text-align:center;}
+                .subtitle{color:#94a3b8;font-size:0.9rem;text-align:center;margin-bottom:24px;}
+                .team-badge{text-align:center;margin-bottom:24px;}
+                .team-badge span{display:inline-block;padding:8px 20px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);border-radius:50px;font-family:monospace;font-weight:700;color:#00d4ff;font-size:1rem;}
+                .submit-btn{display:block;width:100%;padding:14px;background:linear-gradient(135deg,#00d4ff,#8b5cf6);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:20px;transition:transform 0.2s;}
+                .submit-btn:hover{transform:scale(1.02);}
+                .submit-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+                .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:10px;font-size:0.9rem;font-weight:600;z-index:9999;animation:fadeIn 0.3s;}
+                .toast-success{background:#22c55e;color:#fff;}
+                .toast-error{background:#ef4444;color:#fff;}
+                @keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>📝 Update Roll Numbers</h1>
+                <p class="subtitle">Please enter the roll number for each team member</p>
+                <div class="team-badge"><span>${reg.teamName}</span></div>
+                <form id="rollForm">
+                    ${memberInputs}
+                    <button type="submit" class="submit-btn" id="submitBtn">💾 Save Roll Numbers</button>
+                </form>
+            </div>
+            <script>
+                document.getElementById('rollForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const btn = document.getElementById('submitBtn');
+                    btn.disabled = true;
+                    btn.textContent = 'Saving...';
+
+                    const formData = new FormData(e.target);
+                    const rollNumbers = {};
+                    for (const [key, val] of formData.entries()) {
+                        rollNumbers[key] = val;
+                    }
+
+                    try {
+                        const res = await fetch('/api/update-roll/${reg._id}', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ rollNumbers })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            showToast('Roll numbers updated successfully!', 'success');
+                            btn.textContent = '✅ Saved!';
+                        } else {
+                            showToast(data.message || 'Failed to save.', 'error');
+                            btn.disabled = false;
+                            btn.textContent = '💾 Save Roll Numbers';
+                        }
+                    } catch (err) {
+                        showToast('Network error.', 'error');
+                        btn.disabled = false;
+                        btn.textContent = '💾 Save Roll Numbers';
+                    }
+                });
+
+                function showToast(msg, type) {
+                    const t = document.createElement('div');
+                    t.className = 'toast toast-' + type;
+                    t.textContent = msg;
+                    document.body.appendChild(t);
+                    setTimeout(() => t.remove(), 4000);
+                }
+            </script>
+        </body>
+        </html>`);
+    } catch (err) {
+        console.error('Update roll page error:', err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// API: Save roll numbers
+app.post('/api/update-roll/:id', async (req, res) => {
+    try {
+        const reg = await Registration.findById(req.params.id);
+        if (!reg) return res.status(404).json({ success: false, message: 'Team not found.' });
+
+        const { rollNumbers } = req.body; // { roll_0: '23981a4926', roll_1: '...' }
+        reg.members.forEach((member, idx) => {
+            if (rollNumbers[`roll_${idx}`]) {
+                member.rollNumber = rollNumbers[`roll_${idx}`];
+            }
+        });
+        await reg.save();
+        res.json({ success: true, message: 'Roll numbers updated.' });
+    } catch (err) {
+        console.error('Update roll error:', err);
+        res.status(500).json({ success: false, message: 'Server error.' });
+    }
+});
+
+// API: Send update links to all teams missing roll numbers
+app.post('/api/send-update-links', async (req, res) => {
+    try {
+        const allRegs = await Registration.find();
+        // Filter teams missing roll numbers
+        const teamsNeedingUpdate = allRegs.filter(reg =>
+            reg.members.some(m => !m.rollNumber)
+        );
+
+        const baseUrl = req.body.baseUrl || `${req.protocol}://${req.get('host')}`;
+        let sent = 0;
+
+        for (const reg of teamsNeedingUpdate) {
+            const updateLink = `${baseUrl}/update-roll/${reg._id}`;
+            try {
+                await transporter.sendMail({
+                    from: `"Scope 2K26 — REC" <${process.env.EMAIL_USER}>`,
+                    to: reg.email,
+                    subject: `📝 Update Required: Add Roll Numbers — Scope 2K26`,
+                    html: `
+                    <div style="font-family:'Segoe UI',sans-serif;max-width:550px;margin:0 auto;background:#0a0e1a;border-radius:16px;overflow:hidden;border:1px solid #1e293b;">
+                        <div style="background:linear-gradient(135deg,#00d4ff,#3b82f6,#8b5cf6);padding:32px;text-align:center;">
+                            <div style="font-size:40px;margin-bottom:8px;">📝</div>
+                            <h1 style="margin:0;font-size:22px;color:#fff;font-weight:800;">Roll Number Update Required</h1>
+                        </div>
+                        <div style="padding:28px 32px;text-align:center;">
+                            <p style="color:#94a3b8;font-size:14px;line-height:1.6;margin-bottom:20px;">
+                                Hi <strong style="color:#e2e8f0;">${reg.teamName}</strong>,<br>
+                                We need the <strong style="color:#00d4ff;">roll numbers</strong> for all your team members. Please click the button below to update them.
+                            </p>
+                            <a href="${updateLink}" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#00d4ff,#8b5cf6);color:#fff;text-decoration:none;border-radius:10px;font-weight:700;font-size:15px;">Update Roll Numbers →</a>
+                            <p style="margin-top:20px;color:#475569;font-size:12px;">If the button doesn't work, copy this link:<br><span style="color:#00d4ff;word-break:break-all;">${updateLink}</span></p>
+                        </div>
+                        <div style="padding:16px 32px;background:#0f172a;text-align:center;border-top:1px solid #1e293b;">
+                            <p style="color:#475569;font-size:12px;margin:0;">© 2026 Scope 2K26 — Raghu Engineering College</p>
+                        </div>
+                    </div>`
+                });
+                sent++;
+            } catch (emailErr) {
+                console.error(`Failed to send to ${reg.email}:`, emailErr.message);
+            }
+        }
+
+        res.json({ success: true, message: `Update links sent to ${sent}/${teamsNeedingUpdate.length} teams.` });
+    } catch (err) {
+        console.error('Send update links error:', err);
+        res.status(500).json({ success: false, message: 'Server error.' });
     }
 });
 
