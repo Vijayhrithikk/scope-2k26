@@ -207,6 +207,7 @@ async function sendApprovalEmail(registration, baseUrl) {
                 <table style="width:100%;border-collapse:collapse;">
                     <tr style="background:#0f172a;">
                         <th style="padding:12px 16px;text-align:left;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Name</th>
+                        <th style="padding:12px 16px;text-align:left;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Roll No</th>
                         <th style="padding:12px 16px;text-align:left;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Year</th>
                         <th style="padding:12px 16px;text-align:left;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Branch</th>
                         <th style="padding:12px 16px;text-align:left;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Phone</th>
