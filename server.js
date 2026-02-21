@@ -398,16 +398,28 @@ app.put('/api/registrations/:id/reject', async (req, res) => {
 // Edit
 app.put('/api/registrations/:id/edit', async (req, res) => {
     try {
-        const updateData = {};
-        if (req.body.teamName) updateData.teamName = req.body.teamName;
-        if (req.body.teamLead) updateData.teamLead = req.body.teamLead;
-        if (req.body.email) updateData.email = req.body.email;
-        if (req.body.transactionId) updateData.transactionId = req.body.transactionId;
+        const reg = await Registration.findById(req.params.id);
+        if (!reg) return res.status(404).json({ success: false, message: 'Not found.' });
 
-        // Note: Members editing is complex, for now we stick to basic fields as per original scope
-        // or frontend needs update to send structured members
+        // Update basic fields
+        if (req.body.teamName) reg.teamName = req.body.teamName;
+        if (req.body.teamLead) reg.teamLead = req.body.teamLead;
+        if (req.body.email) reg.email = req.body.email;
+        if (req.body.transactionId) reg.transactionId = req.body.transactionId;
+        if (req.body.teamSize) reg.teamSize = parseInt(req.body.teamSize);
 
-        await Registration.findByIdAndUpdate(req.params.id, updateData);
+        // Update members array if provided
+        if (req.body.members && Array.isArray(req.body.members)) {
+            reg.members = req.body.members.map(m => ({
+                name: m.name || '',
+                year: m.year || '',
+                branch: m.branch || '',
+                phone: m.phone || '',
+                rollNumber: m.rollNumber || ''
+            }));
+        }
+
+        await reg.save();
         res.json({ success: true, message: 'Registration updated.' });
     } catch (err) {
         console.error('Edit error:', err);

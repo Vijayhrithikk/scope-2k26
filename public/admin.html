@@ -375,7 +375,7 @@
             border: 1px solid var(--border-color);
             border-radius: var(--radius-xl);
             padding: 32px;
-            max-width: 500px;
+            max-width: 700px;
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
@@ -696,9 +696,24 @@
                         <input type="text" class="form-control" id="editTxnId">
                     </div>
                 </div>
+                <div class="form-group" style="margin-top:4px;">
+                    <label>Team Size</label>
+                    <select class="form-control" id="editTeamSize" onchange="renderEditMembers()">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                    </select>
+                </div>
+
+                <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-color);">
+                    <h3 style="font-size:0.95rem;color:var(--accent-cyan);margin-bottom:12px;">👥 Team Members</h3>
+                    <div id="editMembersContainer"></div>
+                </div>
+
                 <div class="edit-modal-actions">
                     <button type="button" class="btn-outline btn-sm" onclick="closeEditModal()">Cancel</button>
-                    <button type="submit" class="btn-primary btn-sm">Save Changes</button>
+                    <button type="submit" class="btn-primary btn-sm">💾 Save Changes</button>
                 </div>
             </form>
         </div>
@@ -875,6 +890,8 @@
             }
         }
 
+        let editMembersData = []; // temp store for member data
+
         function openEdit(id) {
             const reg = allData.find(r => r.id == id);
             if (!reg) return;
@@ -883,7 +900,61 @@
             document.getElementById('editTeamLead').value = reg.teamLead || '';
             document.getElementById('editEmail').value = reg.email || '';
             document.getElementById('editTxnId').value = reg.transactionId || '';
+            document.getElementById('editTeamSize').value = reg.teamSize || 1;
+
+            // Build members data from flat fields
+            editMembersData = [];
+            for (let i = 1; i <= 4; i++) {
+                if (reg[`member${i}_name`]) {
+                    editMembersData.push({
+                        name: reg[`member${i}_name`] || '',
+                        rollNumber: reg[`member${i}_rollNumber`] || '',
+                        year: reg[`member${i}_year`] || '',
+                        branch: reg[`member${i}_branch`] || '',
+                        phone: reg[`member${i}_phone`] || ''
+                    });
+                }
+            }
+            renderEditMembers();
             document.getElementById('editModal').classList.add('active');
+        }
+
+        function renderEditMembers() {
+            const count = parseInt(document.getElementById('editTeamSize').value) || 1;
+            const container = document.getElementById('editMembersContainer');
+            container.innerHTML = '';
+
+            for (let i = 0; i < count; i++) {
+                const m = editMembersData[i] || {};
+                container.innerHTML += `
+                <div style="background:rgba(15,23,42,0.5);border:1px solid var(--border-color);border-radius:10px;padding:16px;margin-bottom:10px;">
+                    <div style="font-size:0.8rem;color:var(--accent-cyan);font-weight:700;margin-bottom:10px;">Member ${i + 1}${i === 0 ? ' (Lead)' : ''}</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label style="font-size:0.75rem;">Name</label>
+                            <input type="text" class="form-control edit-m-name" data-idx="${i}" value="${m.name || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:0.75rem;">Roll Number</label>
+                            <input type="text" class="form-control edit-m-roll" data-idx="${i}" value="${m.rollNumber || ''}" style="font-family:var(--font-mono);">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label style="font-size:0.75rem;">Year</label>
+                            <input type="text" class="form-control edit-m-year" data-idx="${i}" value="${m.year || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:0.75rem;">Branch</label>
+                            <input type="text" class="form-control edit-m-branch" data-idx="${i}" value="${m.branch || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:0.75rem;">Phone</label>
+                            <input type="text" class="form-control edit-m-phone" data-idx="${i}" value="${m.phone || ''}">
+                        </div>
+                    </div>
+                </div>`;
+            }
         }
 
         function closeEditModal() {
@@ -893,6 +964,21 @@
         document.getElementById('editForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('editId').value;
+            const teamSize = parseInt(document.getElementById('editTeamSize').value) || 1;
+
+            // Collect members
+            const members = [];
+            for (let i = 0; i < teamSize; i++) {
+                const nameEl = document.querySelector(`.edit-m-name[data-idx="${i}"]`);
+                members.push({
+                    name: nameEl ? nameEl.value : '',
+                    rollNumber: document.querySelector(`.edit-m-roll[data-idx="${i}"]`)?.value || '',
+                    year: document.querySelector(`.edit-m-year[data-idx="${i}"]`)?.value || '',
+                    branch: document.querySelector(`.edit-m-branch[data-idx="${i}"]`)?.value || '',
+                    phone: document.querySelector(`.edit-m-phone[data-idx="${i}"]`)?.value || ''
+                });
+            }
+
             try {
                 const res = await fetch(`/api/registrations/${id}/edit`, {
                     method: 'PUT',
@@ -901,7 +987,9 @@
                         teamName: document.getElementById('editTeamName').value,
                         teamLead: document.getElementById('editTeamLead').value,
                         email: document.getElementById('editEmail').value,
-                        transactionId: document.getElementById('editTxnId').value
+                        transactionId: document.getElementById('editTxnId').value,
+                        teamSize: teamSize,
+                        members: members
                     })
                 });
                 const data = await res.json();
