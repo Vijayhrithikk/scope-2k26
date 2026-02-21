@@ -128,6 +128,7 @@ function getMemberRows(reg) {
             if (reg[`member${i}_name`]) {
                 members.push({
                     name: reg[`member${i}_name`],
+                    rollNumber: reg[`member${i}_rollNumber`] || '',
                     year: reg[`member${i}_year`],
                     branch: reg[`member${i}_branch`],
                     phone: reg[`member${i}_phone`]
