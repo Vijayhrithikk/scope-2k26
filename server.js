@@ -136,15 +136,32 @@ function getMemberRows(reg) {
         }
     }
 
-    members.forEach(m => {
+    members.forEach((m, idx) => {
         rows.push(`
-            <tr>
-                <td style="padding:12px 16px;border-bottom:1px solid #1e293b;color:#e2e8f0;font-size:14px;">${m.name}</td>
-                <td style="padding:12px 16px;border-bottom:1px solid #1e293b;color:#94a3b8;font-size:14px;">${m.rollNumber || '—'}</td>
-                <td style="padding:12px 16px;border-bottom:1px solid #1e293b;color:#94a3b8;font-size:14px;">Year ${m.year}</td>
-                <td style="padding:12px 16px;border-bottom:1px solid #1e293b;color:#94a3b8;font-size:14px;">${m.branch}</td>
-                <td style="padding:12px 16px;border-bottom:1px solid #1e293b;color:#94a3b8;font-size:14px;">${m.phone}</td>
-            </tr>`);
+            <div style="background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:16px;margin-bottom:8px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                    <div style="width:24px;height:24px;background:linear-gradient(135deg,#00d4ff,#8b5cf6);border-radius:50%;text-align:center;line-height:24px;font-size:11px;font-weight:700;color:#fff;">${idx + 1}</div>
+                    <span style="font-size:15px;font-weight:700;color:#e2e8f0;">${m.name}</span>
+                </div>
+                <table style="width:100%;border-collapse:collapse;">
+                    <tr>
+                        <td style="padding:4px 0;color:#64748b;font-size:12px;width:70px;">Roll No</td>
+                        <td style="padding:4px 0;color:#00d4ff;font-size:13px;font-family:monospace;font-weight:600;">${m.rollNumber || '—'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:4px 0;color:#64748b;font-size:12px;">Year</td>
+                        <td style="padding:4px 0;color:#94a3b8;font-size:13px;">Year ${m.year}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:4px 0;color:#64748b;font-size:12px;">Branch</td>
+                        <td style="padding:4px 0;color:#94a3b8;font-size:13px;">${m.branch}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:4px 0;color:#64748b;font-size:12px;">Phone</td>
+                        <td style="padding:4px 0;color:#94a3b8;font-size:13px;">${m.phone}</td>
+                    </tr>
+                </table>
+            </div>`);
     });
     return rows.join('');
 }
@@ -204,16 +221,9 @@ async function sendApprovalEmail(registration, baseUrl) {
                 <div style="padding:16px 20px;background:#1e293b;">
                     <h3 style="color:#00d4ff;margin:0;font-size:14px;font-weight:700;">👥 Team Members</h3>
                 </div>
-                <table style="width:100%;border-collapse:collapse;">
-                    <tr style="background:#0f172a;">
-                        <th style="padding:12px 16px;text-align:left;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Name</th>
-                        <th style="padding:12px 16px;text-align:left;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Roll No</th>
-                        <th style="padding:12px 16px;text-align:left;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Year</th>
-                        <th style="padding:12px 16px;text-align:left;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Branch</th>
-                        <th style="padding:12px 16px;text-align:left;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Phone</th>
-                    </tr>
+                <div style="padding:12px;">
                     ${getMemberRows(registration)}
-                </table>
+                </div>
             </div>
 
             <!-- Event Info -->
