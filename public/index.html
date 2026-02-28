@@ -1149,6 +1149,26 @@
             document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
         });
 
+        // Check registration status
+        async function checkStatus() {
+            try {
+                const res = await fetch('/api/settings');
+                const data = await res.json();
+                if (data.success && data.settings.registrationsStopped) {
+                    const ctaButtons = document.querySelectorAll('a[href="/register"]');
+                    ctaButtons.forEach(btn => {
+                        btn.textContent = 'Registrations Closed';
+                        btn.style.opacity = '0.6';
+                        btn.style.pointerEvents = 'none';
+                        btn.style.background = 'var(--text-muted)';
+                    });
+                }
+            } catch (err) {
+                console.error('Failed to check status');
+            }
+        }
+        checkStatus();
+
         // Mobile Nav toggle
         document.getElementById('mobileToggle').addEventListener('click', () => {
             document.getElementById('navLinks').classList.toggle('active');

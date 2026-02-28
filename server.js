@@ -8,6 +8,7 @@ const path = require('path');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const Registration = require('./models/Registration'); // Import our model
+const Settings = require('./models/Settings');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'scope2k26-secret-key';
 const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'scope2k26admin';
@@ -346,6 +347,12 @@ app.get('/api/check-teamname', async (req, res) => {
 // Register
 app.post('/api/register', async (req, res) => {
     try {
+        // Check if registrations are stopped
+        const stoppedSetting = await Settings.findOne({ key: 'registrationsStopped' });
+        if (stoppedSetting && stoppedSetting.value === true) {
+            return res.status(403).json({ success: false, message: 'Registrations are currently closed.' });
+        }
+
         const teamName = (req.body.teamName || '').trim();
 
         // Case-insensitive duplicate check
@@ -486,6 +493,41 @@ app.get('/api/stats', async (req, res) => {
         res.json({ success: true, stats: { total, approved, pending, rejected, revenue: approved * 400 } });
     } catch (err) {
         res.status(500).json({ success: false, message: 'Failed to get stats.' });
+    }
+});
+
+// Settings API
+app.get('/api/settings', async (req, res) => {
+    try {
+        const settings = await Settings.find();
+        const settingsMap = {};
+        settings.forEach(s => settingsMap[s.key] = s.value);
+
+        // Initialize if not exists
+        if (settingsMap.registrationsStopped === undefined) {
+            await new Settings({ key: 'registrationsStopped', value: false }).save();
+            settingsMap.registrationsStopped = false;
+        }
+
+        res.json({ success: true, settings: settingsMap });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Failed to fetch settings.' });
+    }
+});
+
+app.put('/api/settings', async (req, res) => {
+    try {
+        const { key, value } = req.body;
+        if (!key) return res.status(400).json({ success: false, message: 'Key required.' });
+
+        await Settings.findOneAndUpdate(
+            { key },
+            { value },
+            { upsert: true, new: true }
+        );
+        res.json({ success: true, message: `Setting ${key} updated.` });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Failed to update setting.' });
     }
 });
 

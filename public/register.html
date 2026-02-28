@@ -9,6 +9,41 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="scope-logo-circle.png" type="image/png">
     <style>
+        .registrations-stopped-overlay {
+            display: none;
+            text-align: center;
+            padding: 60px 24px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            margin: 40px auto;
+            max-width: 600px;
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .registrations-stopped-overlay h2 {
+            font-size: 2rem;
+            color: var(--accent-red);
+            margin-bottom: 16px;
+        }
+
+        .registrations-stopped-overlay p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 24px;
+        }
+
+        .registrations-stopped-overlay.active {
+            display: block;
+        }
+
+        #registrationForm.disabled {
+            opacity: 0.3;
+            pointer-events: none;
+            filter: grayscale(1);
+        }
+
         .register-page {
             padding: 120px 0 80px;
             min-height: 100vh;
@@ -411,7 +446,16 @@
                 </div>
             </div>
 
-            <div class="register-form-container">
+            <!-- Registrations Stopped Message -->
+            <div class="registrations-stopped-overlay" id="stoppedMessage">
+                <div style="font-size: 4rem; margin-bottom: 20px;">🛑</div>
+                <h2>Registrations are Closed</h2>
+                <p>We've reached our maximum capacity or the deadline has passed. Thank you for your interest in Scope
+                    2K26!</p>
+                <a href="/" class="btn-outline">Back to Home</a>
+            </div>
+
+            <div class="register-form-container" id="formContainer">
                 <!-- Motivation -->
                 <div class="motivation-box">
                     <div class="emoji">🔥</div>
@@ -549,6 +593,21 @@
     </div>
 
     <script>
+        // Check registration status
+        async function checkStatus() {
+            try {
+                const res = await fetch('/api/settings');
+                const data = await res.json();
+                if (data.success && data.settings.registrationsStopped) {
+                    document.getElementById('stoppedMessage').classList.add('active');
+                    document.getElementById('formContainer').style.display = 'none';
+                }
+            } catch (err) {
+                console.error('Failed to check status');
+            }
+        }
+        checkStatus();
+
         // Mobile Nav
         document.getElementById('mobileToggle').addEventListener('click', () => {
             document.getElementById('navLinks').classList.toggle('active');

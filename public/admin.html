@@ -600,6 +600,8 @@
                 </div>
                 <div class="dash-actions">
                     <button class="btn-outline btn-sm" onclick="loadData()">🔄 Refresh</button>
+                    <button class="btn-outline btn-sm" onclick="toggleRegistrations()" id="regToggleBtn">🛑 Stop
+                        Registrations</button>
                     <button class="btn-outline btn-sm" onclick="sendUpdateLinks()" id="updateLinksBtn">📝 Send Roll#
                         Links</button>
                     <button class="btn-primary btn-sm" onclick="exportExcel()">📥 Export Excel</button>
@@ -722,6 +724,7 @@
     <script>
         let allData = [];
         let currentFilter = 'all';
+        let registrationsStopped = false;
         const ADMIN_PASS = 'scope2k26admin'; // This should match .env for real security
 
         // --- Auth ---
@@ -755,18 +758,67 @@
         // --- Data ---
         async function loadData() {
             try {
-                const [regRes, statsRes] = await Promise.all([
+                const [regRes, statsRes, settingsRes] = await Promise.all([
                     fetch('/api/registrations'),
-                    fetch('/api/stats')
+                    fetch('/api/stats'),
+                    fetch('/api/settings')
                 ]);
                 const regData = await regRes.json();
                 const statsData = await statsRes.json();
+                const settingsData = await settingsRes.json();
 
                 allData = regData.data || [];
                 updateStats(statsData.stats || {});
+
+                if (settingsData.success) {
+                    registrationsStopped = settingsData.settings.registrationsStopped;
+                    updateRegToggleButton();
+                }
+
                 renderTable();
             } catch (err) {
                 showToast('Failed to load data', 'error');
+            }
+        }
+
+        function updateRegToggleButton() {
+            const btn = document.getElementById('regToggleBtn');
+            if (registrationsStopped) {
+                btn.textContent = '✅ Resume Registrations';
+                btn.classList.remove('btn-outline');
+                btn.classList.add('btn-primary');
+                btn.style.borderColor = 'var(--accent-green)';
+                btn.style.color = 'var(--accent-green)';
+            } else {
+                btn.textContent = '🛑 Stop Registrations';
+                btn.classList.add('btn-outline');
+                btn.classList.remove('btn-primary');
+                btn.style.borderColor = '';
+                btn.style.color = '';
+            }
+        }
+
+        async function toggleRegistrations() {
+            const newValue = !registrationsStopped;
+            const action = newValue ? 'STOP' : 'RESUME';
+            if (!confirm(`Are you sure you want to ${action} registrations?`)) return;
+
+            try {
+                const res = await fetch('/api/settings', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: 'registrationsStopped', value: newValue })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    registrationsStopped = newValue;
+                    updateRegToggleButton();
+                    showToast(`Registrations ${newValue ? 'stopped' : 'resumed'} successfully`, 'success');
+                } else {
+                    showToast(data.message || 'Failed to update setting', 'error');
+                }
+            } catch (err) {
+                showToast('Network error', 'error');
             }
         }
 
