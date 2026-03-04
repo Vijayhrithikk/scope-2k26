@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check-In — Scope 2K26</title>
+    <meta name="description" content="Admin check-in portal for Scope 2K26">
+    <link rel="icon" href="scope-logo-circle.png" type="image/png">
+    <link rel="stylesheet" href="styles.css">
+    <!-- jsQR for QR scanning -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <style>
+        body {
+            background: #050816;
+        }
+
+        .checkin-page {
+            padding: 100px 0 60px;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ---- Scanner Card ---- */
+        .scanner-card {
+            max-width: 500px;
+            margin: 0 auto 40px;
+            padding: 32px;
+            background: rgba(10, 14, 26, 0.85);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(12px);
+            text-align: center;
+        }
+
+        .scanner-card h2 {
+            font-size: 1.4rem;
+            margin-bottom: 6px;
+        }
+
+        .scanner-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+
+        #qr-video-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: #000;
+            margin-bottom: 20px;
+            border: 2px solid var(--border-color);
+            display: none;
+        }
+
+        #qr-video-wrap.active {
+            display: block;
+            border-color: var(--accent-cyan);
+        }
+
+        #qr-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #qr-canvas {
+            display: none;
+        }
+
+        /* Scan overlay corners */
+        .scan-corner {
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            border-color: var(--accent-cyan);
+            border-style: solid;
+            border-width: 0;
+        }
+
+        .scan-corner.tl {
+            top: 16px;
+            left: 16px;
+            border-top-width: 3px;
+            border-left-width: 3px;
+            border-radius: 4px 0 0 0;
+        }
+
+        .scan-corner.tr {
+            top: 16px;
+            right: 16px;
+            border-top-width: 3px;
+            border-right-width: 3px;
+            border-radius: 0 4px 0 0;
+        }
+
+        .scan-corner.bl {
+            bottom: 16px;
+            left: 16px;
+            border-bottom-width: 3px;
+            border-left-width: 3px;
+            border-radius: 0 0 0 4px;
+        }
+
+        .scan-corner.br {
+            bottom: 16px;
+            right: 16px;
+            border-bottom-width: 3px;
+            border-right-width: 3px;
+            border-radius: 0 0 4px 0;
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+            animation: scanMove 2s linear infinite;
+        }
+
+        @keyframes scanMove {
+            0% {
+                top: 10%;
+            }
+
+            50% {
+                top: 90%;
+            }
+
+            100% {
+                top: 10%;
+            }
+        }
+
+        .scan-status {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            min-height: 1.2em;
+        }
+
+        .scan-status.scanning {
+            color: var(--accent-cyan);
+        }
+
+        .btn-scan {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, #00d4ff, #3b82f6);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-scan:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-scan.active {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        /* ---- Manual entry ---- */
+        .manual-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .manual-row input {
+            flex: 1;
+            padding: 12px 16px;
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .manual-row input:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .manual-row button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff;
+            font-weight: 700;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .manual-row button:hover {
+            transform: scale(1.04);
+        }
+
+        /* ---- Result popup ---- */
+        .result-popup {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result-popup.show {
+            display: flex;
+        }
+
+        .result-box {
+            background: #0f172a;
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .result-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+        }
+
+        .result-box h3 {
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+        }
+
+        .result-box .team-id-badge {
+            display: inline-block;
+            padding: 6px 18px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 50px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: var(--accent-cyan);
+            font-size: 1.1rem;
+            margin: 8px 0 16px;
+        }
+
+        .result-box .meta {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        .result-box .btn-close {
+            margin-top: 24px;
+            padding: 12px 32px;
+            border-radius: var(--radius-md);
+            background: var(--border-color);
+            color: var(--text-primary);
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .result-box.success {
+            border-color: rgba(34, 197, 94, 0.4);
+        }
+
+        .result-box.already {
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+
+        .result-box.error {
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        /* ---- Stats row ---- */
+        .checkin-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .ci-stat {
+            background: rgba(10, 14, 26, 0.7);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .ci-stat .num {
+            font-size: 2.2rem;
+            font-weight: 800;
+            font-family: var(--font-mono);
+        }
+
+        .ci-stat .lbl {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-top: 4px;
+        }
+
+        .ci-stat.green .num {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .ci-stat.amber .num {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .ci-stat.cyan .num {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ---- Team tables ---- */
+        .tables-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .tables-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .checkin-stats {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .team-table-card {
+            background: rgba(10, 14, 26, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            backdrop-filter: blur(8px);
+        }
+
+        .ttc-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .ttc-header h3 {
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ttc-header .count-badge {
+            padding: 2px 10px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .checked-in-header {
+            background: rgba(34, 197, 94, 0.05);
+            border-bottom-color: rgba(34, 197, 94, 0.15);
+        }
+
+        .checked-in-header .count-badge {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .pending-header {
+            background: rgba(245, 158, 11, 0.05);
+            border-bottom-color: rgba(245, 158, 11, 0.15);
+        }
+
+        .pending-header .count-badge {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .ttc-search {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .ttc-search input {
+            width: 100%;
+            padding: 8px 12px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .ttc-search input:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .ttc-list {
+            max-height: 420px;
+            overflow-y: auto;
+        }
+
+        .ttc-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .ttc-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .ttc-list::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 2px;
+        }
+
+        .team-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(42, 47, 74, 0.4);
+            transition: background 0.2s;
+        }
+
+        .team-row:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .team-row:last-child {
+            border-bottom: none;
+        }
+
+        .team-info .t-id {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        .team-info .t-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .team-info .t-lead {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .btn-undo {
+            padding: 5px 12px;
+            border-radius: var(--radius-sm);
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-undo:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-check-now {
+            padding: 5px 12px;
+            border-radius: var(--radius-sm);
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-check-now:hover {
+            background: rgba(34, 197, 94, 0.2);
+        }
+
+        .empty-state {
+            padding: 32px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* ---- Toast ---- */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            padding: 12px 24px;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-weight: 600;
+            z-index: 9999;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success {
+            background: #22c55e;
+            color: #fff;
+        }
+
+        .toast.error {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .toast.info {
+            background: #3b82f6;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-canvas">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar scrolled">
+        <div class="nav-content">
+            <a href="/" class="nav-logo">⚡ <span>Scope 2K26</span></a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/admin">Dashboard</a></li>
+                <li><a href="/checkin" style="color:var(--accent-green);font-weight:600;">✅ Check-In</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="checkin-page main-content">
+        <div class="container">
+
+            <!-- Scanner Card -->
+            <div class="scanner-card">
+                <h2>📷 Team Check-In Scanner</h2>
+                <p>Scan the QR code from the team's approval email or enter Team ID manually</p>
+
+                <!-- Camera view -->
+                <div id="qr-video-wrap">
+                    <video id="qr-video" autoplay muted playsinline></video>
+                    <canvas id="qr-canvas"></canvas>
+                    <div class="scan-corner tl"></div>
+                    <div class="scan-corner tr"></div>
+                    <div class="scan-corner bl"></div>
+                    <div class="scan-corner br"></div>
+                    <div class="scan-line"></div>
+                </div>
+
+                <p class="scan-status" id="scanStatus">Camera is off. Press "Start Scanner" to begin.</p>
+
+                <button class="btn-scan" id="scannerBtn" onclick="toggleScanner()">
+                    <span id="scannerBtnIcon">📷</span>
+                    <span id="scannerBtnText">Start Scanner</span>
+                </button>
+
+                <!-- Manual entry -->
+                <div class="manual-row">
+                    <input type="text" id="manualTeamId" placeholder="SCOPE-01" maxlength="10"
+                        oninput="this.value=this.value.toUpperCase()"
+                        onkeydown="if(event.key==='Enter') manualCheckIn()">
+                    <button onclick="manualCheckIn()">✅ Check In</button>
+                </div>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="checkin-stats" id="statsRow">
+                <div class="ci-stat cyan">
+                    <div class="num" id="statTotal">—</div>
+                    <div class="lbl">Total Teams</div>
+                </div>
+                <div class="ci-stat green">
+                    <div class="num" id="statCheckedIn">—</div>
+                    <div class="lbl">Checked In</div>
+                </div>
+                <div class="ci-stat amber">
+                    <div class="num" id="statPending">—</div>
+                    <div class="lbl">Pending</div>
+                </div>
+            </div>
+
+            <!-- Tables -->
+            <div class="tables-grid">
+
+                <!-- Checked In -->
+                <div class="team-table-card">
+                    <div class="ttc-header checked-in-header">
+                        <h3>✅ Checked In</h3>
+                        <span class="count-badge" id="checkedCount">0</span>
+                    </div>
+                    <div class="ttc-search">
+                        <input type="text" placeholder="Search team..."
+                            oninput="filterList('checked-list', this.value)">
+                    </div>
+                    <div class="ttc-list" id="checked-list">
+                        <div class="empty-state">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Pending -->
+                <div class="team-table-card">
+                    <div class="ttc-header pending-header">
+                        <h3>⏳ Pending</h3>
+                        <span class="count-badge" id="pendingCount">0</span>
+                    </div>
+                    <div class="ttc-search">
+                        <input type="text" placeholder="Search team..."
+                            oninput="filterList('pending-list', this.value)">
+                    </div>
+                    <div class="ttc-list" id="pending-list">
+                        <div class="empty-state">Loading...</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Popup -->
+    <div class="result-popup" id="resultPopup" onclick="if(event.target===this) closeResult()">
+        <div class="result-box" id="resultBox">
+            <div class="result-icon" id="resultIcon">✅</div>
+            <h3 id="resultTitle">Checked In!</h3>
+            <div class="team-id-badge" id="resultTeamId">SCOPE-01</div>
+            <div class="meta" id="resultMeta"></div>
+            <button class="btn-close" onclick="closeResult()">Done</button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let scanning = false;
+        let stream = null;
+        let animFrame = null;
+        let lastScanned = '';
+        let lastScannedTime = 0;
+
+        // ========================
+        // QR SCANNER
+        // ========================
+        function toggleScanner() {
+            if (scanning) stopScanner();
+            else startScanner();
+        }
+
+        async function startScanner() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                const video = document.getElementById('qr-video');
+                video.srcObject = stream;
+                await video.play();
+
+                document.getElementById('qr-video-wrap').classList.add('active');
+                document.getElementById('scannerBtn').classList.add('active');
+                document.getElementById('scannerBtnIcon').textContent = '⛔';
+                document.getElementById('scannerBtnText').textContent = 'Stop Scanner';
+                document.getElementById('scanStatus').textContent = 'Scanning... point camera at QR code.';
+                document.getElementById('scanStatus').className = 'scan-status scanning';
+                scanning = true;
+                scanLoop();
+            } catch (err) {
+                showToast('Camera access denied or unavailable', 'error');
+                document.getElementById('scanStatus').textContent = 'Camera error: ' + err.message;
+            }
+        }
+
+        function stopScanner() {
+            scanning = false;
+            if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+            if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+            document.getElementById('qr-video-wrap').classList.remove('active');
+            document.getElementById('scannerBtn').classList.remove('active');
+            document.getElementById('scannerBtnIcon').textContent = '📷';
+            document.getElementById('scannerBtnText').textContent = 'Start Scanner';
+            document.getElementById('scanStatus').textContent = 'Camera is off. Press "Start Scanner" to begin.';
+            document.getElementById('scanStatus').className = 'scan-status';
+        }
+
+        function scanLoop() {
+            if (!scanning) return;
+            const video = document.getElementById('qr-video');
+            const canvas = document.getElementById('qr-canvas');
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+                if (code) {
+                    const now = Date.now();
+                    const url = code.data;
+                    // Extract team ID from URL like /verify/SCOPE-01
+                    const match = url.match(/\/verify\/(SCOPE-\d+)/i);
+                    if (match) {
+                        const teamId = match[1].toUpperCase();
+                        if (teamId !== lastScanned || now - lastScannedTime > 5000) {
+                            lastScanned = teamId;
+                            lastScannedTime = now;
+                            document.getElementById('scanStatus').textContent = `QR Detected: ${teamId}`;
+                            doCheckIn(teamId);
+                        }
+                    }
+                }
+            }
+            animFrame = requestAnimationFrame(scanLoop);
+        }
+
+        // ========================
+        // CHECK-IN LOGIC
+        // ========================
+        async function doCheckIn(teamId) {
+            try {
+                const res = await fetch(`/api/checkin/${encodeURIComponent(teamId)}`, { method: 'POST' });
+                const data = await res.json();
+                showResult(data);
+                if (data.success) loadStatus();
+            } catch (err) {
+                showToast('Network error', 'error');
+            }
+        }
+
+        function manualCheckIn() {
+            const input = document.getElementById('manualTeamId');
+            const teamId = input.value.trim();
+            if (!teamId) { showToast('Enter a Team ID first', 'error'); return; }
+            doCheckIn(teamId);
+            input.value = '';
+        }
+
+        async function undoCheckIn(teamId) {
+            if (!confirm(`Undo check-in for ${teamId}?`)) return;
+            try {
+                const res = await fetch(`/api/checkin/${encodeURIComponent(teamId)}/undo`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) { showToast('Check-in undone.', 'info'); loadStatus(); }
+                else showToast(data.message, 'error');
+            } catch (err) {
+                showToast('Network error', 'error');
+            }
+        }
+
+        async function quickCheckIn(teamId) {
+            await doCheckIn(teamId);
+        }
+
+        // ========================
+        // RESULT POPUP
+        // ========================
+        function showResult(data) {
+            const box = document.getElementById('resultBox');
+            box.className = 'result-box';
+
+            if (data.success) {
+                document.getElementById('resultIcon').textContent = '🎉';
+                document.getElementById('resultTitle').textContent = 'Checked In!';
+                box.classList.add('success');
+            } else if (data.already) {
+                document.getElementById('resultIcon').textContent = '⚠️';
+                document.getElementById('resultTitle').textContent = 'Already Checked In';
+                box.classList.add('already');
+            } else {
+                document.getElementById('resultIcon').textContent = '❌';
+                document.getElementById('resultTitle').textContent = 'Error';
+                box.classList.add('error');
+            }
+
+            const teamId = data.team ? data.team.teamId : '—';
+            document.getElementById('resultTeamId').textContent = teamId;
+            document.getElementById('resultMeta').innerHTML = data.team
+                ? `<strong>${data.team.teamName}</strong><br>Lead: ${data.team.teamLead}<br>Size: ${data.team.teamSize} member(s)`
+                : data.message;
+
+            document.getElementById('resultPopup').classList.add('show');
+        }
+
+        function closeResult() {
+            document.getElementById('resultPopup').classList.remove('show');
+        }
+
+        // ========================
+        // LOAD STATUS
+        // ========================
+        async function loadStatus() {
+            try {
+                const res = await fetch('/api/checkin/status');
+                const data = await res.json();
+                if (!data.success) return;
+
+                const { checkedIn, pending } = data;
+                const total = checkedIn.length + pending.length;
+
+                document.getElementById('statTotal').textContent = total;
+                document.getElementById('statCheckedIn').textContent = checkedIn.length;
+                document.getElementById('statPending').textContent = pending.length;
+                document.getElementById('checkedCount').textContent = checkedIn.length;
+                document.getElementById('pendingCount').textContent = pending.length;
+
+                renderCheckedList(checkedIn);
+                renderPendingList(pending);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderCheckedList(teams) {
+            const el = document.getElementById('checked-list');
+            if (!teams.length) { el.innerHTML = '<div class="empty-state">No teams checked in yet.</div>'; return; }
+            el.innerHTML = teams.map(t => `
+                <div class="team-row" data-name="${t.teamName.toLowerCase()} ${t.teamId.toLowerCase()}">
+                    <div class="team-info">
+                        <div class="t-id">${t.teamId}</div>
+                        <div class="t-name">${escHtml(t.teamName)}</div>
+                        <div class="t-lead">${escHtml(t.teamLead)} · ${t.teamSize} member(s)</div>
+                    </div>
+                    <button class="btn-undo" onclick="undoCheckIn('${t.teamId}')">Undo</button>
+                </div>
+            `).join('');
+        }
+
+        function renderPendingList(teams) {
+            const el = document.getElementById('pending-list');
+            if (!teams.length) { el.innerHTML = '<div class="empty-state">🎉 All teams have checked in!</div>'; return; }
+            el.innerHTML = teams.map(t => `
+                <div class="team-row" data-name="${t.teamName.toLowerCase()} ${t.teamId.toLowerCase()}">
+                    <div class="team-info">
+                        <div class="t-id">${t.teamId}</div>
+                        <div class="t-name">${escHtml(t.teamName)}</div>
+                        <div class="t-lead">${escHtml(t.teamLead)} · ${t.teamSize} member(s)</div>
+                    </div>
+                    <button class="btn-check-now" onclick="quickCheckIn('${t.teamId}')">Check In</button>
+                </div>
+            `).join('');
+        }
+
+        function filterList(listId, query) {
+            const rows = document.querySelectorAll(`#${listId} .team-row`);
+            const q = query.toLowerCase();
+            rows.forEach(r => {
+                r.style.display = r.dataset.name.includes(q) ? '' : 'none';
+            });
+        }
+
+        function escHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // ========================
+        // TOAST
+        // ========================
+        function showToast(msg, type = 'info') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = `toast ${type} show`;
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        // Auto-refresh every 20s
+        loadStatus();
+        setInterval(loadStatus, 20000);
+    </script>
+</body>
+
+</html>

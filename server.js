@@ -955,10 +955,65 @@ app.get('/api/verify/:teamId', verifyToken, async (req, res) => {
     }
 });
 
+// --- CHECK-IN ROUTES ---
+
+// GET: Check-in status of all approved teams
+app.get('/api/checkin/status', async (req, res) => {
+    try {
+        const teams = await Registration.find({ status: 'approved' }).sort({ teamId: 1 });
+        const checkedIn = teams.filter(t => t.checkedIn).map(t => ({
+            teamId: t.teamId, teamName: t.teamName, teamLead: t.teamLead,
+            teamSize: t.teamSize, checkedInAt: t.checkedInAt
+        }));
+        const pending = teams.filter(t => !t.checkedIn).map(t => ({
+            teamId: t.teamId, teamName: t.teamName, teamLead: t.teamLead,
+            teamSize: t.teamSize
+        }));
+        res.json({ success: true, checkedIn, pending });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Failed to fetch check-in status.' });
+    }
+});
+
+// POST: Check in a team by teamId (e.g. SCOPE-01)
+app.post('/api/checkin/:teamId', async (req, res) => {
+    try {
+        const reg = await Registration.findOne({ teamId: req.params.teamId.toUpperCase() });
+        if (!reg) return res.status(404).json({ success: false, message: `Team "${req.params.teamId}" not found.` });
+        if (reg.status !== 'approved') return res.status(400).json({ success: false, message: `Team is not approved.` });
+        if (reg.checkedIn) return res.status(400).json({ success: false, already: true, message: `Team "${reg.teamName}" is already checked in!`, team: { teamId: reg.teamId, teamName: reg.teamName, teamLead: reg.teamLead, teamSize: reg.teamSize, checkedInAt: reg.checkedInAt } });
+
+        reg.checkedIn = true;
+        reg.checkedInAt = new Date();
+        await reg.save();
+
+        res.json({ success: true, message: `✅ Team "${reg.teamName}" checked in successfully!`, team: { teamId: reg.teamId, teamName: reg.teamName, teamLead: reg.teamLead, teamSize: reg.teamSize, checkedInAt: reg.checkedInAt } });
+    } catch (err) {
+        console.error('Check-in error:', err);
+        res.status(500).json({ success: false, message: 'Check-in failed.' });
+    }
+});
+
+// POST: Undo check-in for a team
+app.post('/api/checkin/:teamId/undo', async (req, res) => {
+    try {
+        const reg = await Registration.findOne({ teamId: req.params.teamId.toUpperCase() });
+        if (!reg) return res.status(404).json({ success: false, message: 'Team not found.' });
+
+        reg.checkedIn = false;
+        reg.checkedInAt = null;
+        await reg.save();
+        res.json({ success: true, message: `Undo check-in for "${reg.teamName}".` });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Undo failed.' });
+    }
+});
+
 // Serve frontend
 app.get('/', (req, res) => res.sendFile(path.join(process.cwd(), 'public', 'index.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(process.cwd(), 'public', 'register.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(process.cwd(), 'public', 'admin.html')));
+app.get('/checkin', (req, res) => res.sendFile(path.join(process.cwd(), 'public', 'checkin.html')));
 
 // Export for Vercel
 module.exports = app;

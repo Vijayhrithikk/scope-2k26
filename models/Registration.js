@@ -17,7 +17,9 @@ const registrationSchema = new mongoose.Schema({
     status: { type: String, default: 'pending', enum: ['pending', 'approved', 'rejected'] },
     teamId: { type: String, default: '' },
     members: [memberSchema],
-    registeredAt: { type: Date, default: Date.now }
+    registeredAt: { type: Date, default: Date.now },
+    checkedIn: { type: Boolean, default: false },
+    checkedInAt: { type: Date, default: null }
 });
 
 module.exports = mongoose.model('Registration', registrationSchema);
